@@ -1,0 +1,212 @@
+<!-- agregar_doctor.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registrar Doctor</title>
+  <link rel="stylesheet" href="stylesa.css">
+  <script>
+    // Protección de página
+    window.onload = () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        window.location.href = "login.html";
+      } else {
+        // Verificar si es admin
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        if (payload.rol !== "admin") {
+          alert("❌ Solo un administrador puede acceder a esta página");
+          window.location.href = "index.html";
+        }
+      }
+    };
+  </script>
+</head>
+<body>
+  <header class="header">
+    <h1>Registrar Doctor</h1>
+    <button style="float:right;" onclick="window.location.href='doctores.html'">Volver</button>
+  </header>
+
+  <main class="contenedor">
+    <div class="tarjeta">
+      <h3>Formulario de Registro</h3>
+      <form id="form-doctor">
+        <label>Nombre:</label>
+        <input type="text" id="nombre" required>
+
+        <label>Apellido:</label>
+        <input type="text" id="apellido" required>
+
+        <label>Correo:</label>
+        <input type="email" id="correo" required>
+
+        <label>Contraseña:</label>
+        <input type="password" id="password" required>
+
+        <label>Rol:</label>
+        <select id="rol" required>
+          <option value="">Seleccione</option>
+          <option value="doctor">Doctor</option>
+          <option value="admin">Admin</option>
+        </select>
+
+        <label>CMP:</label>
+        <input type="text" id="cmp" required>
+
+        <label>Teléfono:</label>
+        <input type="text" id="telefono" required>
+
+        <label for="departamento">Departamento:</label>
+<select id="departamento" name="departamento">
+  <option value="">Seleccione un departamento</option>
+</select>
+
+<label for="provincia">Provincia:</label>
+<select id="provincia" name="provincia">
+  <option value="">Seleccione una provincia</option>
+</select>
+
+<label for="distrito">Distrito:</label>
+<select id="distrito" name="distrito">
+  <option value="">Seleccione un distrito</option>
+</select>
+
+<script>
+  let ubigeoData = {};
+
+  // Cargar JSON
+  fetch("ubigeo.json")
+    .then(res => res.json())
+    .then(data => {
+      ubigeoData = data.departamentos;
+
+      // Llenar departamentos
+      const depSelect = document.getElementById("departamento");
+      Object.keys(ubigeoData).forEach(dep => {
+        let option = document.createElement("option");
+        option.value = dep;
+        option.textContent = dep;
+        depSelect.appendChild(option);
+      });
+    });
+
+  // Al seleccionar departamento
+  document.getElementById("departamento").addEventListener("change", function () {
+    const provinciaSelect = document.getElementById("provincia");
+    const distritoSelect = document.getElementById("distrito");
+    provinciaSelect.innerHTML = "<option value=''>Seleccione una provincia</option>";
+    distritoSelect.innerHTML = "<option value=''>Seleccione un distrito</option>";
+
+    const dep = this.value;
+    if (dep && ubigeoData[dep]) {
+      const provincias = ubigeoData[dep].provincia;
+      Object.keys(provincias).forEach(prov => {
+        let option = document.createElement("option");
+        option.value = prov;
+        option.textContent = prov;
+        provinciaSelect.appendChild(option);
+      });
+    }
+  });
+
+  // Al seleccionar provincia
+  document.getElementById("provincia").addEventListener("change", function () {
+    const distritoSelect = document.getElementById("distrito");
+    distritoSelect.innerHTML = "<option value=''>Seleccione un distrito</option>";
+
+    const dep = document.getElementById("departamento").value;
+    const prov = this.value;
+
+    if (dep && prov && ubigeoData[dep].provincia[prov]) {
+      ubigeoData[dep].provincia[prov].forEach(dist => {
+        let option = document.createElement("option");
+        option.value = dist;
+        option.textContent = dist;
+        distritoSelect.appendChild(option);
+      });
+    }
+  });
+</script>
+
+        <div style="margin-top:10px;">
+          <button type="submit">Registrar Doctor</button>
+        </div>
+      </form>
+      <p id="mensaje"></p>
+    </div>
+  </main>
+
+  <script>
+    const form = document.getElementById("form-doctor");
+    const mensaje = document.getElementById("mensaje");
+    const token = localStorage.getItem("token");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const data = {
+        nombre: document.getElementById("nombre").value,
+        apellido: document.getElementById("apellido").value,
+        correo: document.getElementById("correo").value,
+        password: document.getElementById("password").value,
+        rol: document.getElementById("rol").value,
+        cmp: document.getElementById("cmp").value,
+        telefono: document.getElementById("telefono").value,
+        departamento: document.getElementById("departamento").value,
+        provincia: document.getElementById("provincia").value,
+        distrito: document.getElementById("distrito").value
+      };
+
+      try {
+        const response = await fetch("http://localhost:3000/doctores", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + token
+          },
+          body: JSON.stringify(data)
+        });
+
+        const resData = await response.json();
+
+        if (response.ok) {
+          mensaje.textContent = "✅ " + resData.message;
+          form.reset();
+        } else {
+          mensaje.textContent = "❌ " + (resData.error || "Error al registrar doctor");
+        }
+      } catch (err) {
+        console.error("Error de conexión:", err);
+        mensaje.textContent = "❌ Error de conexión con el servidor";
+      }
+    });
+  </script>
+  <script>// Inputs
+const nombreInput = document.getElementById("nombre");
+const apellidoInput = document.getElementById("apellido");
+const cmpInput = document.getElementById("cmp");
+const telefonoInput = document.getElementById("telefono");
+
+// Validar nombre y apellido: solo letras y espacios
+[nombreInput, apellidoInput].forEach(input => {
+    input.addEventListener("input", () => {
+        input.value = input.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+    });
+});
+
+// Validar CMP: solo números, máximo 6 dígitos
+cmpInput.addEventListener("input", () => {
+    cmpInput.value = cmpInput.value.replace(/\D/g, '');
+    if (cmpInput.value.length > 6) cmpInput.value = cmpInput.value.slice(0, 6);
+});
+
+// Validar teléfono: solo números, máximo 9 dígitos
+telefonoInput.addEventListener("input", () => {
+    telefonoInput.value = telefonoInput.value.replace(/\D/g, '');
+    if (telefonoInput.value.length > 9) telefonoInput.value = telefonoInput.value.slice(0, 9);
+});
+</script>
+</body>
+</html>

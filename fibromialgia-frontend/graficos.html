@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Gráficos de Predicciones</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+
+    .grid-graficos {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      width: 80%;
+      margin: auto;
+    }
+
+    .cuadro {
+      background-color: #f9f9f9;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    canvas { max-width: 100%; max-height: 300px; }
+    h3 { margin-bottom: 15px; }
+
+    .btn-regresar {
+      display: inline-block;
+      margin-bottom: 20px;
+      padding: 12px 25px;
+      background: linear-gradient(135deg, #36A2EB, #1a73e8);
+      color: #fff;
+      font-weight: bold;
+      font-size: 16px;
+      text-decoration: none;
+      border-radius: 30px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      transition: all 0.3s ease;
+    }
+
+    .btn-regresar:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+      background: linear-gradient(135deg, #1a73e8, #36A2EB);
+    }
+
+    .btn-regresar:active {
+      transform: translateY(1px);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+  </style>
+</head>
+<body>
+  <a href="index.html" class="btn-regresar">← Regresar</a>
+  <h2 style="text-align:center;">Dashboard</h2>
+
+  <div class="grid-graficos">
+    <!-- Precisión de Predicción -->
+    <div class="cuadro">
+      <h3>Precisión de Predicción</h3>
+      <canvas id="grafico1"></canvas>
+    </div>
+
+    <!-- Porcentaje de Agravamiento -->
+    <div class="cuadro">
+      <h3>Porcentaje de Pacientes con aumento de intensidad de los síntomas</h3>
+      <canvas id="grafico2" height="300"></canvas>
+    </div>
+
+    <!-- Monto Evitado -->
+    <div class="cuadro">
+      <h3>Monto Evitado por Consulta</h3>
+        <div id="metricasMonto" style="margin-bottom:15px; text-align:center; font-size:16px; font-weight:bold;"></div>
+
+      <canvas id="grafico3"></canvas>
+    </div>
+
+    
+<div class="cuadro">
+  <h3>Porcentaje de pacientes con reducción de gravedad de los síntomas</h3>
+  <canvas id="grafico4" height="300"></canvas>
+</div>
+
+  </div>
+
+  <script>
+    // Gráfico 1: Precisión
+    async function cargarGrafico1() {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch("http://localhost:3000/consultas_predicciones/precision", {
+          headers: { "Authorization": "Bearer " + token }
+        });
+        const data = await res.json();
+        if (!Array.isArray(data) || data.length === 0) return;
+
+        const porcentajes = data.map(item => (item.sintomas_correctos / item.total_sintomas) * 100);
+        const promedio = porcentajes.reduce((a,b)=>a+b,0)/porcentajes.length;
+
+        new Chart(document.getElementById("grafico1").getContext("2d"), {
+          type: "doughnut",
+          data: {
+            labels: ["Precisión", "Error"],
+            datasets: [{
+              data: [promedio, 100-promedio],
+              backgroundColor: ["#36A2EB","#FF6384"]
+            }]
+          },
+          options: {
+            responsive:true,
+            plugins:{
+              legend:{position:"bottom"},
+              tooltip:{ callbacks:{ label:ctx=>ctx.label+": "+ctx.raw.toFixed(2)+"%" } }
+            }
+          }
+        });
+      } catch(e){ console.error("Error gráfico 1:",e); }
+    }
+
+    // Gráfico 2: Agravamiento
+    async function cargarGrafico2() {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch("http://localhost:3000/consultas_predicciones/comparacion_agravamiento", {
+          headers: { "Authorization": "Bearer " + token }
+        });
+        const data = await res.json();
+        if (!Array.isArray(data) || data.length === 0) return;
+
+        let agravamiento = 0, noAgravamiento = 0;
+        data.forEach(item => item.dif_promedio > 0 ? agravamiento++ : noAgravamiento++);
+
+        const total = data.length;
+        new Chart(document.getElementById("grafico2").getContext("2d"), {
+          type: "bar",
+          data: {
+            labels: ["Pacientes con aumento de intensidad","Pacientes sin aumento de intensidad"],
+            datasets: [{
+              label:"Pacientes (%)",
+              data: [(agravamiento/total)*100, (noAgravamiento/total)*100],
+              backgroundColor:["#FF6384","#36A2EB"]
+            }]
+          },
+          options: {
+            responsive:true,
+            plugins:{
+              legend:{ display:false },
+              tooltip:{ callbacks:{ label:ctx=>ctx.label+": "+ctx.raw.toFixed(2)+"%" } }
+            },
+            scales:{ y:{ beginAtZero:true, max:100 } }
+          }
+        });
+
+      } catch(e){ console.error("Error gráfico 2:",e); }
+    }
+
+    // Gráfico 3: Monto Evitado
+    async function cargarGrafico3() {
+      try {
+        const token = localStorage.getItem("token");
+        
+// Traer métricas
+const resMetricas = await fetch("http://localhost:3000/consultas_predicciones/costo_evitado/metricas", {
+  headers: { "Authorization": "Bearer " + token }
+});
+const metricas = await resMetricas.json();
+
+console.log("Datos recibidos métricas:", metricas); // 
+
+if (metricas) {
+  const total = Number(metricas.monto_total) || 0;
+  const promedio = Number(metricas.promedio) || 0;
+
+  document.getElementById("metricasMonto").innerHTML = `
+    Total: S/ ${total.toFixed(2)} <br>
+    Promedio: S/ ${promedio.toFixed(2)}
+  `;
+}
+
+        
+        const res = await fetch("http://localhost:3000/consultas_predicciones/costo_evitado", {
+          headers: { "Authorization": "Bearer " + token }
+        });
+        const data = await res.json();
+        if (!Array.isArray(data) || data.length === 0) return;
+
+        const labels = data.map(item => "Consulta " + item.id_consulta);
+        const valores = data.map(item => Number(item.monto_evitado));
+
+        new Chart(document.getElementById("grafico3").getContext("2d"), {
+          type: "line",
+          data: {
+            labels: labels,
+            datasets: [{
+              label: "Monto evitado (S/)",
+              data: valores,
+              borderColor: "#4CAF50",
+              borderWidth: 3,
+              pointBackgroundColor: "#2e7d32",
+              pointRadius: 5,
+              backgroundColor: "rgba(76, 175, 80, 0.2)",
+              fill: true,
+              tension: 0.3
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              tooltip: {
+                callbacks: {
+                  label: ctx => "S/ " + ctx.raw.toFixed(2)
+                }
+              }
+            },
+            scales: {
+              y: { 
+                beginAtZero: true,
+                ticks: {
+                  callback: val => "S/ " + val
+                }
+              }
+            }
+          }
+        });
+
+      } catch (e) {
+        console.error("Error gráfico 3:", e);
+      }
+    }
+
+async function cargarGrafico4() {
+  try {
+    const token = localStorage.getItem("token");
+    const res = await fetch("http://localhost:3000/consultas_predicciones/comparacion_agravamiento", {
+      headers: { "Authorization": "Bearer " + token }
+    });
+    const data = await res.json();
+    if (!Array.isArray(data) || data.length === 0) return;
+
+    let mejora = 0, sinCambios = 0, agravamiento = 0;
+    data.forEach(item => {
+      if (item.dif_promedio < 0) mejora++;
+      else if (item.dif_promedio === 0) sinCambios++;
+      else agravamiento++;
+    });
+
+    const total = data.length;
+
+    new Chart(document.getElementById("grafico4").getContext("2d"), {
+      type: "pie",
+      data: {
+        labels: [
+          `Pacientes con reducción de gravedad de síntomas (${mejora})`, 
+          `Sin cambios (${sinCambios})`, 
+          `Pacientes sin reducción de gravedad de síntomas (${agravamiento})`
+        ],
+        datasets: [{
+          data: [mejora, sinCambios, agravamiento], // 👈 Ahora son cantidades
+          backgroundColor: ["#4CAF50", "#FFC107", "#F44336"]
+        }]
+      },
+      options: {
+        responsive:true,
+        plugins:{
+          legend:{ position:"bottom" },
+          tooltip:{ 
+            callbacks:{ 
+              label: ctx => `${ctx.label}: ${ctx.raw} pacientes (${((ctx.raw/total)*100).toFixed(2)}%)`
+            } 
+          }
+        }
+      }
+    });
+  } catch (e) {
+    console.error("Error gráfico 4:", e);
+  }
+}
+
+    document.addEventListener("DOMContentLoaded", () => { 
+      cargarGrafico1(); 
+      cargarGrafico2();  
+      cargarGrafico3(); 
+      cargarGrafico4();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+/* === Reset básico === */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #f4f6f9; /* gris clarito de fondo */
+}
+
+/* === Header superior === */
+.header {
+  background-color: #1f3b73; /* azul oscuro */
+  color: white;
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.header button {
+  background-color: #fff;
+  color: #1f3b73;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.header button:hover {
+  background-color: #ddd;
+}
+
+/* === Contenedor principal === */
+.contenedor {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 30px;
+}
+
+/* === Tarjeta del formulario === */
+.tarjeta {
+  background-color: #fff;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px; /* ancho fijo similar al screenshot */
+}
+
+.tarjeta h3 {
+  margin-bottom: 20px;
+  color: #1f3b73;
+}
+
+/* === Inputs y labels === */
+form label {
+  display: block;
+  margin-top: 10px;
+  font-weight: bold;
+  color: #333;
+}
+
+form input,
+form select,
+form textarea {
+  width: 100%;
+  padding: 8px;
+  margin-top: 5px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+form textarea {
+  resize: none;
+}
+
+/* === Botones === */
+form button {
+  margin-top: 15px;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+form button[type="submit"] {
+  background-color: #4285f4; /* azul Google */
+  color: #fff;
+}
+
+form button[type="submit"]:hover {
+  background-color: #357ae8;
+}
+
+form button[type="button"],
+.header button {
+  background-color: #eee;
+  color: #333;
+}
+
+form button[type="button"]:hover {
+  background-color: #ddd;
+}
+/* === Lista de Doctores === */
+#lista-doctores {
+  list-style: none;   /* quita viñetas */
+  padding: 0;
+  margin: 0;
+}
+
+#lista-doctores li {
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  margin-bottom: 10px;
+  padding: 12px 15px;
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background 0.2s;
+}
+
+#lista-doctores li:hover {
+  background: #eef3ff;
+}
+
+/* === Botones de acción (editar y borrar) === */
+#lista-doctores button {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 16px;
+  margin-left: 8px;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+/* Botón borrar */
+#lista-doctores button:nth-child(1) {
+  color: #e74c3c; /* rojo */
+}
+
+#lista-doctores button:nth-child(1):hover {
+  background: #fdecea;
+}
+
+/* Botón editar */
+#lista-doctores button:nth-child(2) {
+  color: #3498db; /* azul */
+}
+
+#lista-doctores button:nth-child(2):hover {
+  background: #eaf4fd;
+}

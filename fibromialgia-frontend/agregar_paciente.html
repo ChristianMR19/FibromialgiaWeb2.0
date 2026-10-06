@@ -1,0 +1,155 @@
+<!-- agregar_paciente.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agregar Paciente - Fibromialgia</title>
+  <link rel="stylesheet" href="styles.css">
+  <script>
+    // Protección de página
+    const token = localStorage.getItem("token");
+    if (!token) window.location.href = "login.html";
+  </script>
+</head>
+<body>
+  <header class="header">
+    <h1>Agregar Paciente</h1>
+    <button class="btn azul" onclick="window.location.href='index.html'">⬅ Volver</button>
+  </header>
+
+  <main class="contenedor">
+    <div class="tarjeta">
+      <h3>Nuevo Paciente</h3>
+      <form id="form-agregar-paciente">
+        <label>Nombre:</label>
+        <input type="text" id="nombre" required>
+
+        <label>Apellido:</label>
+        <input type="text" id="apellido" required>
+
+        <label>DNI:</label>
+        <input type="text" id="dni" required>
+
+        <label>Fecha de Nacimiento:</label>
+        <input type="date" id="fecha_nacimiento">
+
+        <label>Sexo:</label>
+        <select id="sexo">
+          <option value="">Seleccione</option>
+          <option value="Masculino">Masculino</option>
+          <option value="Femenino">Femenino</option>
+        </select>
+
+        <label>Dirección:</label>
+        <input type="text" id="direccion">
+
+        <label>Correo:</label>
+        <input type="email" id="correo">
+
+        <label>Observaciones:</label>
+        <textarea id="observaciones"></textarea>
+
+        <div style="display:flex; justify-content:space-between; margin-top:10px;">
+          <button type="submit">Agregar Paciente</button>
+          <button type="button" onclick="window.location.href='index.html'">Regresar</button>
+        </div>
+      </form>
+      <p id="mensaje"></p>
+    </div>
+  </main>
+<script>
+// Solo permitir letras y espacios en Nombre y Apellido
+const nombreInput = document.getElementById("nombre");
+const apellidoInput = document.getElementById("apellido");
+
+function soloLetras(event) {
+  event.target.value = event.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+}
+
+nombreInput.addEventListener("input", soloLetras);
+apellidoInput.addEventListener("input", soloLetras);
+</script>
+
+  <script>
+const form = document.getElementById("form-agregar-paciente");
+const mensaje = document.getElementById("mensaje");
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  mensaje.textContent = "";
+
+  const nombre = document.getElementById("nombre").value.trim();
+  const apellido = document.getElementById("apellido").value.trim();
+  const dni = document.getElementById("dni").value.trim();
+  const correo = document.getElementById("correo").value.trim();
+
+  // --- VALIDACIONES ---
+  if (!nombre || !apellido || !dni) {
+    mensaje.textContent = "❌ Nombre, Apellido y DNI son obligatorios";
+    return;
+  }
+
+  // Validar que nombre y apellido solo tengan letras y espacios
+  const letrasRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+  if (!letrasRegex.test(nombre)) {
+    mensaje.textContent = "❌ Nombre solo puede contener letras y espacios";
+    return;
+  }
+  if (!letrasRegex.test(apellido)) {
+    mensaje.textContent = "❌ Apellido solo puede contener letras y espacios";
+    return;
+  }
+
+  // Validar DNI 8 números
+  if (!/^\d{8}$/.test(dni)) {
+    mensaje.textContent = "❌ DNI debe tener 8 números";
+    return;
+  }
+
+  // Validar correo
+  if (correo && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
+    mensaje.textContent = "❌ Correo inválido";
+    return;
+  }
+
+  const data = {
+    nombre,
+    apellido,
+    dni,
+    fecha_nacimiento: document.getElementById("fecha_nacimiento").value,
+    sexo: document.getElementById("sexo").value,
+    direccion: document.getElementById("direccion").value,
+    correo,
+    observaciones: document.getElementById("observaciones").value
+  };
+
+  try {
+    const response = await fetch("http://localhost:3000/pacientes", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + token
+      },
+      body: JSON.stringify(data)
+    });
+
+    const resData = await response.json();
+    mensaje.textContent = response.ok
+      ? "✅ Paciente agregado correctamente"
+      : "❌ " + (resData.error || "Error al agregar paciente");
+
+    if (response.ok) form.reset();
+
+  } catch (err) {
+    console.error(err);
+    mensaje.textContent = "❌ Error de conexión con el servidor";
+  }
+});
+</script>
+
+
+  <script src="loadHeader.js"></script>
+
+</body>
+</html>

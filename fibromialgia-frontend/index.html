@@ -1,0 +1,222 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pacientes - Fibromialgia</title>
+
+    <link rel="stylesheet" href="styles.css">
+    <!-- Script de protección -->
+    <script>
+        window.onload = () => {
+            // Revisar si existe token
+            const token = localStorage.getItem("token");
+            if (!token) {
+                // Si no hay token, redirige al login
+                window.location.href = "login.html";
+            }
+            if (token) {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                const infoDoctor = document.getElementById("info-doctor");
+                infoDoctor.textContent = `👤 ${payload.nombre} ${payload.apellido} (${payload.rol})`;
+                if (payload.rol === "admin") {
+                    document.getElementById("btn-registrar-doctor").style.display = "inline-block";
+                }
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <!-- Encabezado -->
+
+    <!-- Sidebar oculto por defecto -->
+    <aside class="sidebar">
+        <button onclick="window.location.href='generar_consulta.html'">Crear consulta</button>
+
+        <button onclick="window.location.href='agregar_paciente.html'">Agregar Paciente</button>
+        <button onclick="window.location.href='editar_paciente.html'">Editar Paciente</button>
+        <button onclick="window.location.href='eliminar_paciente.html'">Eliminar Paciente</button>
+        <button onclick="window.location.href='graficos.html'">Ver Gráficos</button>
+        <button onclick="window.location.href='consultas_predicciones.html'"> Ver Consultas y Predicciones</button>
+
+        
+        <button id="btn-registrar-doctor" style="display:none;"
+            onclick="window.location.href='doctores.html'">Administrar Doctores</button>
+    </aside>
+
+    <main class="main-content">
+        <!-- Aquí va todo el contenido principal -->
+    </main>
+
+
+
+
+    <main class="contenedor">
+<!-- Cuadros de información -->
+<div class="info-cuadros" style="display:flex; gap:20px; margin-bottom:20px;">
+    <div class="cuadro" id="cuadro-confiabilidad" style="flex:1; padding:15px; background:#e0f7fa; border-radius:8px; text-align:center;">
+        <h3>Promedio de Confiabilidad</h3>
+        <p id="promedio-confiabilidad">Cargando...</p>
+    </div>
+    <div class="cuadro" id="cuadro-predicciones" style="flex:1; padding:15px; background:#fff3e0; border-radius:8px; text-align:center;">
+        <h3>Total de Predicciones</h3>
+        <p id="total-predicciones">Cargando...</p>
+    </div>
+</div>
+
+
+        <!-- Panel del médico -->
+        <section class="panel">
+            <h2>Panel del Médico</h2>
+            <div class="panel-flex">
+
+                <!-- Lista de pacientes -->
+                <div class="tarjeta">
+                    <h3>Lista de Pacientes</h3>
+                    <!-- Input de búsqueda -->
+                    <input type="text" id="buscar-dni" placeholder="Buscar por DNI..."
+                        style="margin-bottom: 10px; padding:5px; width:100%;">
+
+                    <ul class="lista-pacientes" id="lista-pacientes">
+                        <!-- Pacientes dinámicos -->
+                    </ul>
+                </div>
+
+                <!-- Gestión de pacientes 
+                <div class="tarjeta">
+                    <h3>Gestión de Pacientes</h3>
+                    <div class="botones-gestion">
+                        <button class="btn azul" onclick="window.location.href='agregar_paciente.html'">➕ Agregar
+                            Paciente</button>
+                        <button class="btn amarillo" onclick="window.location.href='editar_paciente.html'">✏ Editar
+                            Paciente</button>
+                        <button class="btn rojo" onclick="window.location.href='eliminar_paciente.html'">🗑 Eliminar
+                            Paciente</button>
+                        <button class="btn verde" onclick="window.location.href='graficos.html'">📊 Ver Gráficos</button>
+                        <button class="btn gris" onclick="window.location.href='consultas_predicciones.html'">📊 Ver
+                            Consultas y Predicciones</button>
+                        <button id="btn-registrar-doctor" class="btn azul" style="display:none;"
+                            onclick="window.location.href='doctores.html'">Administrar doctores</button>
+
+                    </div>
+                </div>-->
+
+            </div>
+        </section>
+    </main>
+    <script src="loadHeader.js"></script>
+    <script>
+            const token = localStorage.getItem("token");
+
+
+       async function cargarResumenPredicciones() {
+    try {
+        const res = await fetch("http://localhost:3000/consultas_predicciones/resumen", {
+            headers: { "Authorization": "Bearer " + token }
+        });
+        const data = await res.json();
+
+        document.getElementById("promedio-confiabilidad").textContent = data.promedioConfiabilidad.toFixed(2) + "%";
+        document.getElementById("total-predicciones").textContent = data.totalPredicciones;
+    } catch (err) {
+        document.getElementById("promedio-confiabilidad").textContent = "❌ Error";
+        document.getElementById("total-predicciones").textContent = "❌ Error";
+    }
+}
+
+// Llamar al cargar la página
+cargarResumenPredicciones();
+
+
+    </script>
+
+    <script src="app.js"></script>
+    <!-- Script para abrir/cerrar sidebar -->
+    <script>
+        const btnMenu = document.getElementById('btn-menu');
+        const sidebar = document.getElementById('sidebar');
+        const closeSidebar = document.getElementById('close-sidebar');
+
+        btnMenu.addEventListener('click', () => {
+            sidebar.classList.add('active');
+        });
+
+        closeSidebar.addEventListener('click', () => {
+            sidebar.classList.remove('active');
+        });
+    </script>
+
+
+    <script>
+        const listaPacientesUl = document.getElementById("lista-pacientes");
+        const inputBuscar = document.getElementById("buscar-dni");
+
+        let pacientes = [];
+
+        // Función para mostrar pacientes en la lista
+        function mostrarPacientes(lista) {
+            listaPacientesUl.innerHTML = "";
+            lista.forEach(p => {
+                const li = document.createElement("li");
+                li.textContent = `${p.nombre} ${p.apellido} - DNI: ${p.dni}`;
+
+                  // 🔹 Crear botón "Ver consultas"
+        const btnConsultas = document.createElement("button");
+        btnConsultas.textContent = "Ver consultas";
+        btnConsultas.classList.add("btn-azul"); // puedes darle estilo en tu CSS
+        btnConsultas.style.marginLeft = "10px";
+
+        // Guardar paciente en localStorage y redirigir
+        btnConsultas.addEventListener("click", () => {
+            localStorage.setItem("pacienteSeleccionado", p.id_paciente);
+            window.location.href = "consultas_predicciones.html";
+        });
+
+        li.appendChild(btnConsultas);
+
+                listaPacientesUl.appendChild(li);
+            });
+        }
+
+        // Cargar pacientes desde el backend
+        async function cargarPacientes() {
+            try {
+                const res = await fetch("http://localhost:3000/pacientes", {
+                    headers: { "Authorization": "Bearer " + token }
+                });
+                pacientes = await res.json();
+                mostrarPacientes(pacientes);
+            } catch (err) {
+                listaPacientesUl.innerHTML = "<li>❌ Error al cargar pacientes</li>";
+            }
+        }
+
+        // Filtrar pacientes mientras escribes
+       inputBuscar.addEventListener("input", () => {
+    // Elimina todo lo que no sea número
+    inputBuscar.value = inputBuscar.value.replace(/\D/g, '');
+
+    // Limita a 8 caracteres
+    if (inputBuscar.value.length > 8) {
+        inputBuscar.value = inputBuscar.value.slice(0, 8);
+    }
+
+    // Filtrar pacientes mientras escriben en el input
+    const valor = inputBuscar.value.trim();
+    const filtrados = pacientes.filter(p => p.dni.includes(valor));
+    mostrarPacientes(filtrados);
+});
+
+
+        // Carga inicial
+        cargarPacientes();
+    </script>
+
+
+</body>
+
+</html>

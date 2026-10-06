@@ -1,0 +1,653 @@
+<!-- consultas_predicciones.html -->
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consultas y Predicciones</title>
+    <link rel="stylesheet" href="consultas_predicciones.css">
+
+</head>
+
+<body>
+    <header>
+        <h1>Consultas y Predicciones</h1>
+        <button class="btn azul" onclick="window.location.href='index.html'">⬅ Volver</button>
+
+    </header>
+
+    <main>
+        <label for="buscar-paciente">Buscar paciente por DNI:</label>
+<input type="text" id="buscar-paciente" placeholder="Ingrese DNI">
+
+<label for="paciente-select">Seleccione paciente:</label>
+<select id="paciente-select">
+    <option value="">--Seleccione--</option>
+</select>
+
+
+        <table id="tabla-consultas">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Síntomas</th>
+                    <th>Predicción</th>
+                    <th>Observaciones</th>
+                    <th>Detalle</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </main>
+
+    <div id="modal-detalle" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Detalle de Consulta</h2>
+            <div id="detalle-consulta"></div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem("token");
+        if (!token) window.location.href = "login.html";
+
+        const pacienteSelect = document.getElementById("paciente-select");
+        const tablaBody = document.querySelector("#tabla-consultas tbody");
+        const modal = document.getElementById("modal-detalle");
+        const detalleDiv = document.getElementById("detalle-consulta");
+        const spanClose = document.querySelector(".close");
+
+        spanClose.onclick = () => modal.style.display = "none";
+        window.onclick = (e) => { if (e.target == modal) modal.style.display = "none"; }
+
+        function formatearFecha(fecha) { return fecha.split('T')[0]; }
+        function formatearDecimal(valor) { return valor !== null ? Number(valor).toFixed(2) : "N/A"; }
+
+        async function cargarPacientes() {
+            const res = await fetch("http://localhost:3000/pacientes", { headers: { "Authorization": `Bearer ${token}` } });
+            const data = await res.json();
+            data.forEach(p => {
+                const opt = document.createElement("option");
+                opt.value = p.id_paciente;
+                opt.textContent = `${p.nombre} ${p.apellido}`;
+                pacienteSelect.appendChild(opt);
+            });
+        }
+
+        pacienteSelect.addEventListener("change", async () => {
+            const id = pacienteSelect.value;
+            if (!id) return;
+            const res = await fetch(`http://localhost:3000/consultas_predicciones/paciente/${id}`, { headers: { "Authorization": `Bearer ${token}` } });
+            const consultas = await res.json();
+            tablaBody.innerHTML = "";
+
+            consultas.forEach(c => {
+                const tr = document.createElement("tr");
+
+                const sintomasTd = document.createElement("td");
+                sintomasTd.textContent = `Dolor:${formatearDecimal(c.dolor_muscular)}, Fatiga:${formatearDecimal(c.fatiga)}, Sueño:${formatearDecimal(c.problemas_sueno)}, Ansiedad:${formatearDecimal(c.ansiedad)}, Rigidez:${formatearDecimal(c.rigidez_muscular)}, Concentración:${formatearDecimal(c.dificultad_concentracion)}, Hormigueo:${formatearDecimal(c.hormigueo)}, Dolor Cabeza:${formatearDecimal(c.dolor_cabeza)}, Digestivos:${formatearDecimal(c.problemas_digestivos)}`;
+
+                const predTd = document.createElement("td");
+                predTd.textContent = c.prob_dolor_muscular !== null ? "Generada" : "Pendiente";
+
+                const fechaTd = document.createElement("td");
+                fechaTd.textContent = formatearFecha(c.fecha_consulta);
+
+                const obsTd = document.createElement("td");
+                obsTd.textContent = c.observaciones || "";
+     const detalleTd = document.createElement("td");
+     if (!(c.tiene_monto_evitado && c.tiene_sintomas_actuales && c.tiene_precision)) {
+           
+                const btn = document.createElement("button");
+                btn.textContent = "Ver prediccion";
+                btn.classList.add("btn-detalle", "btn-espaciado");
+                btn.addEventListener("click", () => verDetalle(c));
+                detalleTd.appendChild(btn);
+}
+if (c.tiene_monto_evitado && c.tiene_sintomas_actuales && c.tiene_precision) {
+           
+                const btn2 = document.createElement("button");
+                btn2.textContent = "Ver prediccion";
+                btn2.classList.add("btn-detalle", "btn-espaciado");
+                btn2.addEventListener("click", () => verDetalle2(c));
+                detalleTd.appendChild(btn2);
+}
+                // 🔹 Mostrar botón solo si NO tiene síntomas actuales
+    if (!c.tiene_sintomas_actuales) { 
+        const btnAgravamiento = document.createElement("button");
+        btnAgravamiento.textContent = "Ingresar síntomas actuales";
+        btnAgravamiento.classList.add("btn-detalle", "btn-espaciado");
+        btnAgravamiento.addEventListener("click", () => {
+            Swal.fire({
+                title: "Confirmación requerida",
+                text: "¿Confirma que ya pasaron al menos 2 semanas desde la primera consulta?",
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonText: "Sí, confirmar",
+                cancelButtonText: "Cancelar",
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    ingresarSintomasActuales(c);
+                }
+            });
+        });
+        detalleTd.appendChild(document.createElement("br"));
+        detalleTd.appendChild(btnAgravamiento);
+    }
+
+    // 🔹 Mostrar botón solo si NO tiene monto evitado
+    if (!c.tiene_monto_evitado) {
+        const btnCosto = document.createElement("button");
+        btnCosto.textContent = "Ingresar monto evitado";
+        btnCosto.classList.add("btn-detalle", "btn-espaciado");
+        btnCosto.addEventListener("click", () => ingresarMontoEvitado(c));
+        detalleTd.appendChild(document.createElement("br"));
+        detalleTd.appendChild(btnCosto);
+    }
+
+    // 🔹 Mostrar botón solo si YA tiene monto evitado
+if (c.tiene_monto_evitado && c.tiene_sintomas_actuales) {
+    const btnEvolucion = document.createElement("button");
+    btnEvolucion.textContent = "Ver Detalle";
+    btnEvolucion.classList.add("btn-detalle", "btn-espaciado");
+    btnEvolucion.addEventListener("click", () => mostrarEvolucion(c));
+    detalleTd.appendChild(document.createElement("br"));
+    detalleTd.appendChild(btnEvolucion);
+}
+
+                tr.appendChild(fechaTd);
+                tr.appendChild(sintomasTd);
+                tr.appendChild(predTd);
+                tr.appendChild(obsTd);
+                tr.appendChild(detalleTd);
+
+                tablaBody.appendChild(tr);
+            });
+        });
+        async function mostrarEvolucion(consulta) {
+    try {
+        const res = await fetch(`http://localhost:3000/consultas_predicciones/comparacion_agravamiento/${consulta.id_consulta}`, {
+    headers: { "Authorization": `Bearer ${token}` }
+});
+if (!res.ok) {
+    detalleDiv.innerHTML = "<p>No hay comparación registrada para esta consulta.</p>";
+    modal.style.display = "block";
+    return;
+}
+const comp = await res.json();
+
+        // 2️⃣ Construir tabla comparativa
+        const sintomas = [
+            { nombre: "Dolor muscular", inicial: consulta.dolor_muscular, dif: comp.dif_dolor_muscular },
+            { nombre: "Fatiga", inicial: consulta.fatiga, dif: comp.dif_fatiga },
+            { nombre: "Rigidez muscular", inicial: consulta.rigidez_muscular, dif: comp.dif_rigidez },
+            { nombre: "Problemas de sueño", inicial: consulta.problemas_sueno, dif: comp.dif_problemas_sueno },
+            { nombre: "Ansiedad", inicial: consulta.ansiedad, dif: comp.dif_ansiedad },
+            { nombre: "Dificultad concentración", inicial: consulta.dificultad_concentracion, dif: comp.dif_dificultad_concentracion },
+            { nombre: "Hormigueo", inicial: consulta.hormigueo, dif: comp.dif_hormigueo },
+            { nombre: "Dolor de cabeza", inicial: consulta.dolor_cabeza, dif: comp.dif_dolor_cabeza },
+            { nombre: "Problemas digestivos", inicial: consulta.problemas_digestivos, dif: comp.dif_problemas_digestivos }
+        ];
+
+        let filas = "";
+        sintomas.forEach(s => {
+            const actual = (parseFloat(s.inicial) + parseFloat(s.dif)).toFixed(2);
+            let estado = "";
+            if (s.dif > 0) estado = "🔴 Empeoró";
+            else if (s.dif < 0) estado = "🟢 Mejoró";
+            else estado = "⚪ Igual";
+
+            filas += `
+                <tr>
+                    <td>${s.nombre}</td>
+                    <td>${s.inicial}</td>
+                    <td>${s.dif > 0 ? "+" + s.dif : s.dif}</td>
+                    <td>${actual}</td>
+                    <td>${estado}</td>
+                </tr>
+            `;
+        });
+
+        // 3️⃣ Renderizar en modal
+        detalleDiv.innerHTML = `
+            <h3>Comparativo de Síntomas</h3>
+            <table class="detalle-tabla comparacion">
+                <thead>
+                    <tr>
+                        <th>Síntoma</th>
+                        <th>Inicial (Primera consulta)</th>
+                        <th>Cambio</th>
+                        <th>Segunda Consulta</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>${filas}</tbody>
+            </table>
+
+            
+        `;
+        modal.style.display = "block";
+
+    } catch (error) {
+        console.error("Error mostrando cuadro comparativo:", error);
+    }
+}
+
+        function ingresarSintomasActuales(consulta) {
+            detalleDiv.innerHTML = `
+        <h3>Ingresar síntomas actuales</h3>
+<form id="form-agravamiento" class="form-card">
+  <input type="hidden" id="id_consulta" value="${consulta.id_consulta}">
+
+  <div class="form-grid">
+    <div class="form-group">
+      <label for="dolor_muscular">Dolor muscular:</label>
+      <input type="number" id="dolor_muscular" step="0.01" min="0" max="1" required>
+    </div>
+
+    <div class="form-group">
+      <label for="fatiga">Fatiga:</label>
+      <input type="number" id="fatiga" step="0.01" min="0" max="1" required>
+    </div>
+
+    <div class="form-group">
+      <label for="rigidez">Rigidez:</label>
+      <input type="number" id="rigidez" step="0.01" min="0" max="1" required>
+    </div>
+
+    <div class="form-group">
+      <label for="problemas_sueno">Problemas de sueño:</label>
+      <input type="number" id="problemas_sueno" step="0.01" min="0" max="1" required>
+    </div>
+
+    <div class="form-group">
+      <label for="ansiedad">Ansiedad:</label>
+      <input type="number" id="ansiedad" step="0.01" min="0" max="1" required>
+    </div>
+
+    <div class="form-group">
+      <label for="dificultad_concentracion">Dificultad concentración:</label>
+      <input type="number" id="dificultad_concentracion" step="0.01" min="0" max="1" required>
+    </div>
+
+    <div class="form-group">
+      <label for="hormigueo">Hormigueo:</label>
+      <input type="number" id="hormigueo" step="0.01" min="0" max="1" required>
+    </div>
+
+    <div class="form-group">
+      <label for="dolor_cabeza">Dolor de cabeza:</label>
+      <input type="number" id="dolor_cabeza" step="0.01" min="0" max="1" required>
+    </div>
+
+    <div class="form-group">
+      <label for="problemas_digestivos">Problemas digestivos:</label>
+      <input type="number" id="problemas_digestivos" step="0.01" min="0" max="1" required>
+    </div>
+  </div>
+
+  <button type="submit" class="btn azul">Guardar síntomas actuales</button>
+</form>
+        <div id="resultado-agravamiento"></div>
+        
+    `;
+            modal.style.display = "block";
+        }
+
+        function verDetalle(consulta) {
+            console.log("consulta:", consulta)
+            const estado = (valor) => valor ? "Positivo" : "Negativo";
+
+            detalleDiv.innerHTML = `
+        <div class="section-title">Síntomas vs Predicción</div>
+        <table class="detalle-tabla comparacion">
+            <thead>
+                <tr>
+                    <th>Síntoma</th>
+                    <th>Consulta</th>
+                    <th>Predicción</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Dolor muscular</td><td>${formatearDecimal(consulta.dolor_muscular)}</td><td>${formatearDecimal(consulta.prob_dolor_muscular)}</td></tr>
+                <tr><td>Fatiga</td><td>${formatearDecimal(consulta.fatiga)}</td><td>${formatearDecimal(consulta.prob_fatiga)}</td></tr>
+                <tr><td>Problemas de sueño</td><td>${formatearDecimal(consulta.problemas_sueno)}</td><td>${formatearDecimal(consulta.prob_problemas_sueno)}</td></tr>
+                <tr><td>Ansiedad</td><td>${formatearDecimal(consulta.ansiedad)}</td><td>${formatearDecimal(consulta.prob_ansiedad)}</td></tr>
+                <tr><td>Rigidez muscular</td><td>${formatearDecimal(consulta.rigidez_muscular)}</td><td>${formatearDecimal(consulta.prob_rigidez_muscular)}</td></tr>
+                <tr><td>Dificultad de concentración</td><td>${formatearDecimal(consulta.dificultad_concentracion)}</td><td>${formatearDecimal(consulta.prob_dificultad_concentracion)}</td></tr>
+                <tr><td>Hormigueo</td><td>${formatearDecimal(consulta.hormigueo)}</td><td>${formatearDecimal(consulta.prob_hormigueo)}</td></tr>
+                <tr><td>Dolor de cabeza</td><td>${formatearDecimal(consulta.dolor_cabeza)}</td><td>${formatearDecimal(consulta.prob_dolor_cabeza)}</td></tr>
+                <tr><td>Problemas digestivos</td><td>${formatearDecimal(consulta.problemas_digestivos)}</td><td>${formatearDecimal(consulta.prob_problemas_digestivos)}</td></tr>
+            </tbody>
+        </table>
+
+        <div class="section-title">Comorbilidades</div>
+        <ul>
+            <li>Depresión: ${estado(consulta.depresion)}</li>
+            <li>Migraña: ${estado(consulta.migrania)}</li>
+            <li>Hipotiroidismo: ${estado(consulta.hipotiroidismo)}</li>
+            <li>Artritis: ${estado(consulta.artritis)}</li>
+        </ul>
+
+        <div class="section-title">Observaciones</div>
+        <p>${consulta.observaciones || "Ninguna"}</p>
+        <div class="section-title">Evaluar precisión</div>
+<form id="form-precision">
+    <p><strong>Total de síntomas predichos:</strong> <span id="total-sintomas-mostrar">9</span></p>
+
+  <!-- Campos ocultos para usar en el submit -->
+  <input type="hidden" id="total-sintomas" value="9">
+  <input type="hidden" id="id_prediccion" value="${consulta.id_prediccion}">
+
+  <label>Síntomas correctamente predichos:</label>
+  <input type="number" id="sintomas-correctos" min="0" max="9" step="1" required>
+
+    <button type="submit" class="btn azul">Guardar precisión</button>
+</form>
+<div id="resultado-precision"></div>
+    `;
+            modal.style.display = "block";
+
+        }
+
+        function verDetalle2(consulta) {
+            console.log("consulta:", consulta)
+            const estado = (valor) => valor ? "Positivo" : "Negativo";
+
+            detalleDiv.innerHTML = `
+        <div class="section-title">Síntomas vs Predicción</div>
+        <table class="detalle-tabla comparacion">
+            <thead>
+                <tr>
+                    <th>Síntoma</th>
+                    <th>Consulta</th>
+                    <th>Predicción</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Dolor muscular</td><td>${formatearDecimal(consulta.dolor_muscular)}</td><td>${formatearDecimal(consulta.prob_dolor_muscular)}</td></tr>
+                <tr><td>Fatiga</td><td>${formatearDecimal(consulta.fatiga)}</td><td>${formatearDecimal(consulta.prob_fatiga)}</td></tr>
+                <tr><td>Problemas de sueño</td><td>${formatearDecimal(consulta.problemas_sueno)}</td><td>${formatearDecimal(consulta.prob_problemas_sueno)}</td></tr>
+                <tr><td>Ansiedad</td><td>${formatearDecimal(consulta.ansiedad)}</td><td>${formatearDecimal(consulta.prob_ansiedad)}</td></tr>
+                <tr><td>Rigidez muscular</td><td>${formatearDecimal(consulta.rigidez_muscular)}</td><td>${formatearDecimal(consulta.prob_rigidez_muscular)}</td></tr>
+                <tr><td>Dificultad de concentración</td><td>${formatearDecimal(consulta.dificultad_concentracion)}</td><td>${formatearDecimal(consulta.prob_dificultad_concentracion)}</td></tr>
+                <tr><td>Hormigueo</td><td>${formatearDecimal(consulta.hormigueo)}</td><td>${formatearDecimal(consulta.prob_hormigueo)}</td></tr>
+                <tr><td>Dolor de cabeza</td><td>${formatearDecimal(consulta.dolor_cabeza)}</td><td>${formatearDecimal(consulta.prob_dolor_cabeza)}</td></tr>
+                <tr><td>Problemas digestivos</td><td>${formatearDecimal(consulta.problemas_digestivos)}</td><td>${formatearDecimal(consulta.prob_problemas_digestivos)}</td></tr>
+            </tbody>
+        </table>
+
+        <div class="section-title">Comorbilidades</div>
+        <ul>
+            <li>Depresión: ${estado(consulta.depresion)}</li>
+            <li>Migraña: ${estado(consulta.migrania)}</li>
+            <li>Hipotiroidismo: ${estado(consulta.hipotiroidismo)}</li>
+            <li>Artritis: ${estado(consulta.artritis)}</li>
+        </ul>
+
+        <div class="section-title">Observaciones</div>
+        <p>${consulta.observaciones || "Ninguna"}</p>
+       
+
+
+    `;
+            modal.style.display = "block";
+
+        }
+
+        cargarPacientes();
+        // Manejo del formulario de precisión
+        document.addEventListener("submit", async (e) => {
+            if (e.target && e.target.id === "form-precision") {
+                e.preventDefault();
+
+                const id_prediccion = document.getElementById("id_prediccion").value; // lo guardamos al abrir detalle
+                const total_sintomas = document.getElementById("total-sintomas").value;
+                const sintomas_correctos = document.getElementById("sintomas-correctos").value;
+
+                try {
+                    console.log("Enviando precisión:", { id_prediccion, total_sintomas, sintomas_correctos });
+
+                    const res = await fetch("http://localhost:3000/consultas_predicciones/precision", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ id_prediccion, total_sintomas, sintomas_correctos })
+                    });
+
+                    const data = await res.json();
+                    if (res.ok) {
+                        const porcentaje = (sintomas_correctos / total_sintomas) * 100;
+                        document.getElementById("resultado-precision").textContent =
+                            `✅ Precisión guardada: ${porcentaje.toFixed(2)}%`;
+                    } else {
+                        document.getElementById("resultado-precision").textContent =
+                            `❌ Error: ${data.error}`;
+                    }
+
+                } catch (error) {
+                    document.getElementById("resultado-precision").textContent =
+                        `⚠ Ocurrió un error al guardar la precisión`;
+                    console.error("Error:", error);
+                }
+            }
+        });
+        document.addEventListener("submit", async (e) => {
+            if (e.target && e.target.id === "form-agravamiento") {
+                e.preventDefault();
+
+                const id_consulta = document.getElementById("id_consulta").value;
+
+                const sintomas_actuales = {
+                    dolor_muscular: parseFloat(document.getElementById("dolor_muscular").value),
+                    fatiga: parseFloat(document.getElementById("fatiga").value),
+                    rigidez: parseFloat(document.getElementById("rigidez").value),
+                    problemas_sueno: parseFloat(document.getElementById("problemas_sueno").value),
+                    ansiedad: parseFloat(document.getElementById("ansiedad").value),
+                    dificultad_concentracion: parseFloat(document.getElementById("dificultad_concentracion").value),
+                    hormigueo: parseFloat(document.getElementById("hormigueo").value),
+                    dolor_cabeza: parseFloat(document.getElementById("dolor_cabeza").value),
+                    problemas_digestivos: parseFloat(document.getElementById("problemas_digestivos").value),
+                };
+
+                try {
+                    const res = await fetch("http://localhost:3000/consultas_predicciones/comparacion_agravamiento", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ id_consulta, sintomas_actuales })
+                    });
+
+                    const data = await res.json();
+                    if (res.ok) {
+                        document.getElementById("resultado-agravamiento").textContent = "✅ Síntomas guardados correctamente";
+                    } else {
+                        document.getElementById("resultado-agravamiento").textContent = `❌ Error: ${data.error}`;
+                    }
+
+                } catch (error) {
+                    console.error(error);
+                    document.getElementById("resultado-agravamiento").textContent = "⚠ Error al guardar los síntomas";
+                }
+            }
+        });
+        document.addEventListener("submit", async (e) => {
+    if (e.target && e.target.id === "form-costo-evitado") {
+        e.preventDefault();
+
+        const id_consulta = document.getElementById("id_consulta_evitado").value;
+        const monto_evitado = parseFloat(document.getElementById("monto_evitado").value);
+
+        try {
+            const res = await fetch("http://localhost:3000/consultas_predicciones/costo_evitado", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({ id_consulta, monto_evitado })
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                document.getElementById("resultado-costo-evitado").textContent = "✅ Monto guardado correctamente";
+            
+            
+            } else {
+                document.getElementById("resultado-costo-evitado").textContent = `❌ Error: ${data.error}`;
+            }
+
+        } catch (error) {
+            console.error(error);
+            document.getElementById("resultado-costo-evitado").textContent = "⚠ Error al guardar el monto evitado";
+        }
+    }
+});
+
+async function ingresarMontoEvitado(consulta) {
+    try {
+        const res = await fetch(`http://localhost:3000/consultas_predicciones/comparacion_agravamiento/${consulta.id_consulta}`, {
+    headers: { "Authorization": `Bearer ${token}` }
+});
+if (!res.ok) {
+    detalleDiv.innerHTML = "<p>No hay comparación registrada para esta consulta.</p>";
+    modal.style.display = "block";
+    return;
+}
+const comp = await res.json();
+
+        // 2️⃣ Construir tabla comparativa
+        const sintomas = [
+            { nombre: "Dolor muscular", inicial: consulta.dolor_muscular, dif: comp.dif_dolor_muscular },
+            { nombre: "Fatiga", inicial: consulta.fatiga, dif: comp.dif_fatiga },
+            { nombre: "Rigidez muscular", inicial: consulta.rigidez_muscular, dif: comp.dif_rigidez },
+            { nombre: "Problemas de sueño", inicial: consulta.problemas_sueno, dif: comp.dif_problemas_sueno },
+            { nombre: "Ansiedad", inicial: consulta.ansiedad, dif: comp.dif_ansiedad },
+            { nombre: "Dificultad concentración", inicial: consulta.dificultad_concentracion, dif: comp.dif_dificultad_concentracion },
+            { nombre: "Hormigueo", inicial: consulta.hormigueo, dif: comp.dif_hormigueo },
+            { nombre: "Dolor de cabeza", inicial: consulta.dolor_cabeza, dif: comp.dif_dolor_cabeza },
+            { nombre: "Problemas digestivos", inicial: consulta.problemas_digestivos, dif: comp.dif_problemas_digestivos }
+        ];
+
+        let filas = "";
+        sintomas.forEach(s => {
+            const actual = (parseFloat(s.inicial) + parseFloat(s.dif)).toFixed(2);
+            let estado = "";
+            if (s.dif > 0) estado = "🔴 Empeoró";
+            else if (s.dif < 0) estado = "🟢 Mejoró";
+            else estado = "⚪ Igual";
+
+            filas += `
+                <tr>
+                    <td>${s.nombre}</td>
+                    <td>${s.inicial}</td>
+                    <td>${s.dif > 0 ? "+" + s.dif : s.dif}</td>
+                    <td>${actual}</td>
+                    <td>${estado}</td>
+                </tr>
+            `;
+        });
+
+        // 3️⃣ Renderizar en modal
+        detalleDiv.innerHTML = `
+            <h3>Monto Evitado - Comparativo de Síntomas</h3>
+            <table class="detalle-tabla comparacion">
+                <thead>
+                    <tr>
+                        <th>Síntoma</th>
+                        <th>Inicial</th>
+                        <th>Cambio</th>
+                        <th>Actual</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>${filas}</tbody>
+            </table>
+
+            <form id="form-costo-evitado" class="form-card">
+                <input type="hidden" id="id_consulta_evitado" value="${consulta.id_consulta}">
+                <div class="form-group">
+                    <label for="monto_evitado">Monto evitado (S/):</label>
+                    <input type="number" id="monto_evitado" step="0.01" min="0" required>
+                </div>
+                <button type="submit" class="btn azul">Guardar monto evitado</button>
+            </form>
+            <div id="resultado-costo-evitado"></div>
+        `;
+        modal.style.display = "block";
+
+    } catch (error) {
+        console.error("Error mostrando cuadro comparativo:", error);
+    }
+}
+
+
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+window.onload = () => {
+    const token = localStorage.getItem("token");
+    const pacienteSelect = document.getElementById("paciente-select");
+    const buscarPacienteInput = document.getElementById("buscar-paciente");
+    let pacientes = [];
+
+    async function cargarPacientes() {
+        try {
+            const res = await fetch("http://localhost:3000/pacientes", {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            pacientes = await res.json();
+            mostrarPacientes(pacientes);
+
+            // Recuperar paciente guardado
+            const pacienteGuardado = localStorage.getItem("pacienteSeleccionado");
+            if (pacienteGuardado) {
+                const esperarPacientes = setInterval(() => {
+                    if (pacienteSelect.options.length > 1) {
+                        pacienteSelect.value = pacienteGuardado;
+                        pacienteSelect.dispatchEvent(new Event("change"));
+                        clearInterval(esperarPacientes);
+                        localStorage.removeItem("pacienteSeleccionado");
+                    }
+                }, 300);
+            }
+        } catch (err) {
+            console.error("Error al cargar pacientes:", err);
+        }
+    }
+
+    function mostrarPacientes(lista) {
+        pacienteSelect.innerHTML = '<option value="">--Seleccione--</option>';
+        lista.forEach(p => {
+            const opt = document.createElement("option");
+            opt.value = p.id_paciente;
+            opt.textContent = `${p.nombre} ${p.apellido} - DNI: ${p.dni}`;
+            pacienteSelect.appendChild(opt);
+        });
+    }
+
+    // Filtro de búsqueda
+    buscarPacienteInput.addEventListener("input", () => {
+        const valor = buscarPacienteInput.value.trim();
+        const filtrados = pacientes.filter(p => p.dni.includes(valor));
+        mostrarPacientes(filtrados);
+    });
+
+    cargarPacientes();
+};
+</script>
+
+
+
+</body>
+
+</html>

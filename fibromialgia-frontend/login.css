@@ -1,0 +1,113 @@
+/* Fuente moderna y fondo suave */
+body {
+  margin: 0;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #74b9ff, #a29bfe);
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Caja del login */
+.login-container {
+  background: #ffffff;
+  padding: 2.5rem;
+  border-radius: 15px;
+  box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+  animation: fadeIn 0.7s ease-in-out;
+}
+
+.login-container h2 {
+  margin-bottom: 1.5rem;
+  color: #2d3436;
+}
+
+/* Inputs y labels */
+label {
+  display: block;
+  text-align: left;
+  margin: 0.5rem 0 0.2rem;
+  font-weight: 500;
+  color: #2d3436;
+}
+
+input {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border: 1px solid #dfe6e9;
+  border-radius: 10px;
+  outline: none;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+}
+
+input:focus {
+  border-color: #0984e3;
+  box-shadow: 0 0 6px rgba(9, 132, 227, 0.4);
+}
+
+/* Botón */
+button {
+  width: 100%;
+  padding: 0.9rem;
+  background: #0984e3;
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+button:hover {
+  background: #74b9ff;
+  transform: scale(1.03);
+}
+
+/* Mensajes */
+#mensaje {
+  margin-top: 1rem;
+  font-weight: 600;
+}
+
+#mensaje.success {
+  color: #00b894;
+}
+
+#mensaje.error {
+  color: #d63031;
+}
+
+/* Animación */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Nombre del software */
+.nombre-software {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #0984e3; /* azul tecnológico */
+  margin-bottom: 0.5rem;
+  text-shadow: 1px 1px 4px rgba(0,0,0,0.15);
+}
+
+/* Título principal */
+.titulo-plataforma {
+  font-size: 1rem;
+  color: #2d3436;
+  margin-bottom: 0.5rem;
+}
+
+.subtitulo {
+  font-size: 0.9rem;
+  color: #636e72;
+  margin-bottom: 1.5rem;
+}

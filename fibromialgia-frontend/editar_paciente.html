@@ -1,0 +1,231 @@
+<!-- editar_paciente.html -->
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Paciente - Fibromialgia</title>
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        // Protección de página
+        const token = localStorage.getItem("token");
+        if (!token) window.location.href = "login.html";
+    </script>
+</head>
+
+<body>
+    <header class="header">
+        <h1>Editar Paciente</h1>
+        <button class="btn azul" onclick="window.location.href='index.html'">⬅ Volver</button>
+    </header>
+
+    <main class="contenedor">
+        <label for="dni-filtro">Filtrar por DNI:</label>
+        <input type="text" id="dni-filtro" placeholder="Ingrese DNI">
+
+        <table id="tabla-pacientes">
+            <thead>
+                <tr>
+                    <th>DNI</th>
+                    <th>Nombre</th>
+                    <th>Apellido</th>
+                    <th>Correo</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Pacientes dinámicos -->
+            </tbody>
+        </table>
+
+        <div id="form-editar" style="display:none; margin-top:20px;">
+            <h3>Editar Datos</h3>
+            <form id="editarForm">
+                <label>Nombre:</label>
+                <input type="text" id="nombre" required>
+
+                <label>Apellido:</label>
+                <input type="text" id="apellido" required>
+
+                <label>Fecha de Nacimiento:</label>
+                <input type="date" id="fecha_nacimiento">
+
+                <label>Sexo:</label>
+                <select id="sexo">
+                    <option value="">Seleccione</option>
+                    <option value="Masculino">Masculino</option>
+                    <option value="Femenino">Femenino</option>
+                </select>
+
+                <label>Dirección:</label>
+                <input type="text" id="direccion">
+
+                <label>Correo:</label>
+                <input type="email" id="correo">
+
+                <label>Observaciones:</label>
+                <textarea id="observaciones"></textarea>
+
+                <button type="submit">Guardar Cambios</button>
+            </form>
+            <p id="mensaje-editar"></p>
+        </div>
+
+        <p id="mensaje"></p>
+    </main>
+
+    <script>
+        const tablaBody = document.querySelector("#tabla-pacientes tbody");
+        const mensaje = document.getElementById("mensaje");
+        const dniFiltro = document.getElementById("dni-filtro");
+        const formEditar = document.getElementById("form-editar");
+        const mensajeEditar = document.getElementById("mensaje-editar");
+        let pacientes = [];
+        let dniActual = "";
+
+        // Función para formatear fecha de la base de datos a yyyy-MM-dd
+        function formatearFecha(fecha) {
+            if (!fecha) return "";
+            // Si la fecha viene como YYYYMMDD
+            const str = fecha.toString();
+            if (str.length === 8) {
+                return `${str.slice(0, 4)}-${str.slice(4, 6)}-${str.slice(6, 8)}`;
+            }
+            // Si viene como Date u otro formato
+            let d = new Date(fecha);
+            if (isNaN(d)) return "";
+            const anio = d.getFullYear();
+            const mes = String(d.getMonth() + 1).padStart(2, '0');
+            const dia = String(d.getDate()).padStart(2, '0');
+            return `${anio}-${mes}-${dia}`;
+        }
+
+        async function cargarPacientes() {
+            try {
+                const response = await fetch("http://localhost:3000/pacientes", {
+                    headers: { "Authorization": "Bearer " + token }
+                });
+                pacientes = await response.json();
+                mostrarPacientes(pacientes);
+            } catch (err) {
+                mensaje.textContent = "❌ Error de conexión con el servidor";
+            }
+        }
+
+        function mostrarPacientes(lista) {
+            tablaBody.innerHTML = "";
+            lista.forEach(p => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+          <td>${p.dni}</td>
+          <td>${p.nombre}</td>
+          <td>${p.apellido}</td>
+          <td>${p.correo || ""}</td>
+          <td><button class="editar" data-dni="${p.dni}">Editar</button></td>
+        `;
+                tablaBody.appendChild(tr);
+            });
+        }
+
+        dniFiltro.addEventListener("input", () => {
+            const valor = dniFiltro.value.trim();
+            const filtrados = pacientes.filter(p => p.dni.includes(valor));
+            mostrarPacientes(filtrados);
+        });
+
+        tablaBody.addEventListener("click", async (e) => {
+            if (!e.target.classList.contains("editar")) return;
+            dniActual = e.target.dataset.dni;
+
+            try {
+                const response = await fetch(`http://localhost:3000/pacientes/${dniActual}`, {
+                    headers: { "Authorization": "Bearer " + token }
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    mensaje.textContent = "❌ " + (data.error || "Paciente no encontrado");
+                    return;
+                }
+
+                document.getElementById("nombre").value = data.nombre;
+                document.getElementById("apellido").value = data.apellido;
+                document.getElementById("fecha_nacimiento").value = formatearFecha(data.fecha_nacimiento);
+                document.getElementById("direccion").value = data.direccion || "";
+                document.getElementById("correo").value = data.correo || "";
+                document.getElementById("observaciones").value = data.observaciones || "";
+
+                // Seleccionar el sexo correcto
+                const sexoPaciente = data.sexo || "";
+                const selectSexo = document.getElementById("sexo");
+                if (sexoPaciente && Array.from(selectSexo.options).some(opt => opt.value === sexoPaciente)) {
+                    selectSexo.value = sexoPaciente;
+                } else {
+                    selectSexo.value = "";
+                }
+
+                formEditar.style.display = "block";
+                mensaje.textContent = "";
+            } catch (err) {
+                mensaje.textContent = "❌ Error de conexión con el servidor";
+            }
+        });
+
+        document.getElementById("editarForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            try {
+                const body = {
+                    nombre: document.getElementById("nombre").value,
+                    apellido: document.getElementById("apellido").value,
+                    fecha_nacimiento: document.getElementById("fecha_nacimiento").value,
+                    sexo: document.getElementById("sexo").value,
+                    direccion: document.getElementById("direccion").value,
+                    correo: document.getElementById("correo").value,
+                    observaciones: document.getElementById("observaciones").value
+                };
+
+                const response = await fetch(`http://localhost:3000/pacientes/${dniActual}`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer " + token
+                    },
+                    body: JSON.stringify(body)
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    mensajeEditar.textContent = "❌ " + (data.error || "Error al actualizar");
+                    return;
+                }
+
+                mensajeEditar.textContent = "✅ Paciente actualizado correctamente";
+                cargarPacientes();
+                formEditar.style.display = "none";
+            } catch (err) {
+                mensajeEditar.textContent = "❌ Error de conexión con el servidor";
+            }
+        });
+
+        // Carga inicial
+        cargarPacientes();
+    </script>
+    <script>
+  const nombreInput = document.getElementById("nombre");
+  const apellidoInput = document.getElementById("apellido");
+
+  function soloLetras(event) {
+    // Reemplaza todo lo que no sea letra o espacio
+    event.target.value = event.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]/g, '');
+  }
+
+  nombreInput.addEventListener("input", soloLetras);
+  apellidoInput.addEventListener("input", soloLetras);
+</script>
+
+
+    <script src="loadHeader.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,216 @@
+<!-- generar_consulta.html -->
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generar Consulta - Fibromialgia</title>
+    <link rel="stylesheet" href="stylesx.css">
+    <style>
+        .contenedor { max-width: 700px; margin: 30px auto; padding: 20px; background: #fff; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h2 { text-align: center; margin-bottom: 20px; }
+        form { display: flex; flex-direction: column; gap: 12px; }
+        label { font-weight: bold; }
+        input[type="number"], select, textarea { width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc; }
+        input[type="checkbox"] { margin-right: 6px; }
+        button { padding: 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        #btn-guardar { background-color: #4CAF50; color: white; }
+        #btn-guardar:hover { background-color: #45a049; }
+        #btn-regresar { background-color: #2196F3; color: white; float: right; }
+        #btn-regresar:hover { background-color: #0b7dda; }
+        #mensaje { margin-top: 10px; font-weight: bold; text-align: center; }
+        .seccion { margin-bottom: 15px; }
+    </style>
+    <script>
+        const token = localStorage.getItem("token");
+        if (!token) window.location.href = "login.html";
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            const btnRegresar = document.getElementById("btn-regresar");
+            const form = document.getElementById("form-consulta");
+            const mensaje = document.getElementById("mensaje");
+
+            btnRegresar.addEventListener("click", () => {
+                window.location.href = "index.html";
+            });
+
+            // Cargar pacientes para el select
+            const selectPaciente = document.getElementById("paciente");
+const inputBuscar = document.getElementById("buscar-paciente");
+let listaPacientes = []; // Guardamos todos los pacientes
+
+try {
+    const res = await fetch("http://localhost:3000/pacientes", {
+        headers: { "Authorization": "Bearer " + token }
+    });
+    listaPacientes = await res.json();
+    renderPacientes(listaPacientes);
+} catch (err) {
+    mensaje.textContent = "❌ Error cargando pacientes";
+}
+
+// Función para renderizar el select
+function renderPacientes(pacientes) {
+    selectPaciente.innerHTML = '<option value="">--Seleccione--</option>';
+    pacientes.forEach(p => {
+        const option = document.createElement("option");
+        option.value = p.id_paciente;
+        option.textContent = `${p.nombre} ${p.apellido} — DNI: ${p.dni}`;
+        selectPaciente.appendChild(option);
+    });
+}
+
+// Filtrar pacientes mientras escriben en el input
+inputBuscar.addEventListener("input", () => {
+    const filtro = inputBuscar.value.trim();
+    const filtrados = listaPacientes.filter(p => p.dni.includes(filtro));
+    renderPacientes(filtrados);
+});
+
+
+            form.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                mensaje.textContent = "";
+
+                const data = {
+                    id_paciente: selectPaciente.value,
+                    dolor_muscular: parseFloat(document.getElementById("dolor_muscular").value) || 0,
+                    fatiga: parseFloat(document.getElementById("fatiga").value) || 0,
+                    problemas_sueno: parseFloat(document.getElementById("problemas_sueno").value) || 0,
+                    ansiedad: parseFloat(document.getElementById("ansiedad").value) || 0,
+                    rigidez_muscular: parseFloat(document.getElementById("rigidez_muscular").value) || 0,
+                    dificultad_concentracion: parseFloat(document.getElementById("dificultad_concentracion").value) || 0,
+                    hormigueo: parseFloat(document.getElementById("hormigueo").value) || 0,
+                    dolor_cabeza: parseFloat(document.getElementById("dolor_cabeza").value) || 0,
+                    problemas_digestivos: parseFloat(document.getElementById("problemas_digestivos").value) || 0,
+                    depresion: document.getElementById("depresion").checked,
+                    migrania: document.getElementById("migrania").checked,
+                    hipotiroidismo: document.getElementById("hipotiroidismo").checked,
+                    artritis: document.getElementById("artritis").checked,
+                    observaciones: document.getElementById("observaciones").value
+                };
+
+                try {
+                    const res = await fetch("http://localhost:3000/consultas", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+                        body: JSON.stringify(data)
+                    });
+                    const resData = await res.json();
+                    if (!res.ok) {
+                        mensaje.textContent = "❌ " + (resData.error || "Error al generar la consulta");
+                        return;
+                    }
+                    mensaje.textContent = "✅ Consulta generada correctamente";
+                    form.reset();
+                } catch (err) {
+                    mensaje.textContent = "❌ Error de conexión con el servidor";
+                }
+            });
+        });
+
+        
+    </script>
+</head>
+
+<body>
+    <header class="header">
+        <h1>Generar Consulta</h1>
+        <button id="btn-regresar">Volver</button>
+    </header>
+
+    <main class="contenedor">
+        <form id="form-consulta">
+            <div class="seccion">
+    <label for="buscar-paciente">Buscar paciente por DNI:</label>
+    <input type="text" id="buscar-paciente" placeholder="Ingrese DNI">
+    
+    <select id="paciente" required>
+        <option value="">--Seleccione--</option>
+    </select>
+</div>
+
+
+            <h3>Síntomas (0 a 1)</h3>
+            <div class="seccion">
+                <label>Dolor Muscular:</label><input type="number" step="0.01" min="0" max="1" id="dolor_muscular">
+                <label>Fatiga:</label><input type="number" step="0.01" min="0" max="1" id="fatiga">
+                <label>Problemas de Sueño:</label><input type="number" step="0.01" min="0" max="1" id="problemas_sueno">
+                <label>Ansiedad:</label><input type="number" step="0.01" min="0" max="1" id="ansiedad">
+                <label>Rigidez Muscular:</label><input type="number" step="0.01" min="0" max="1" id="rigidez_muscular">
+                <label>Dificultad de Concentración:</label><input type="number" step="0.01" min="0" max="1" id="dificultad_concentracion">
+                <label>Hormigueo:</label><input type="number" step="0.01" min="0" max="1" id="hormigueo">
+                <label>Dolor de Cabeza:</label><input type="number" step="0.01" min="0" max="1" id="dolor_cabeza">
+                <label>Problemas Digestivos:</label><input type="number" step="0.01" min="0" max="1" id="problemas_digestivos">
+            </div>
+
+            <h3>Comorbilidades</h3>
+            <div class="seccion">
+                <label><input type="checkbox" id="depresion">Depresión</label>
+                <label><input type="checkbox" id="migrania">Migraña</label>
+                <label><input type="checkbox" id="hipotiroidismo">Hipotiroidismo</label>
+                <label><input type="checkbox" id="artritis">Artritis</label>
+            </div>
+
+            <div class="seccion">
+                <label>Observaciones:</label>
+                <textarea id="observaciones" rows="3"></textarea>
+            </div>
+
+            <button type="submit" id="btn-guardar">Guardar Consulta</button>
+        </form>
+        <p id="mensaje"></p>
+    </main>
+
+    <script>
+document.addEventListener("DOMContentLoaded", async () => {
+    const btnRegresar = document.getElementById("btn-regresar");
+    const form = document.getElementById("form-consulta");
+    const mensaje = document.getElementById("mensaje");
+
+    // Botón regresar
+    btnRegresar.addEventListener("click", () => {
+        window.location.href = "index.html";
+    });
+
+    // Cargar pacientes (tu fetch y renderPacientes va aquí)
+    // ...
+
+    // Validación: solo números entre 0 y 1
+    const sintomasInputs = [
+        "dolor_muscular",
+        "fatiga",
+        "problemas_sueno",
+        "ansiedad",
+        "rigidez_muscular",
+        "dificultad_concentracion",
+        "hormigueo",
+        "dolor_cabeza",
+        "problemas_digestivos"
+    ];
+
+    sintomasInputs.forEach(id => {
+        const input = document.getElementById(id);
+        input.addEventListener("input", () => {
+            let value = parseFloat(input.value);
+            if (isNaN(value)) {
+                input.value = "";
+                return;
+            }
+            if (value > 1) input.value = 1;
+            if (value < 0) input.value = 0;
+        });
+    });
+
+    // Evento submit del form
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        // tu código de envío de formulario aquí...
+    });
+});
+</script>
+
+</body>
+
+</html>

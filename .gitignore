@@ -1,0 +1,17 @@
+# Variables de entorno
+.env
+**/.env
+
+# Dependencias de Node.js
+**/node_modules/
+
+# Entornos virtuales de Python
+**/.venv/
+**/venv/
+
+# Archivos temporales de Python
+**/__pycache__/
+*.pyc
+
+# Configuración de editores
+.vscode/

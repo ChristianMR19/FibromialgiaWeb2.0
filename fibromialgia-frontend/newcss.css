@@ -1,0 +1,524 @@
+/* -------------------------------
+   Reset y base
+-------------------------------- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+body {
+    background-color: #f5f7fa;
+    color: #333;
+    min-height: 100vh;
+}
+header h1 {
+    color: #4a90e2; /* azul como botones o la paleta que quieras */
+    font-size: 1.8rem;
+    margin: 0;
+}
+
+/* -------------------------------
+   Header
+-------------------------------- */
+.header {
+    background-color: #1f3a5f; /* azul oscuro */
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 30px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+.header-left {
+    font-weight: bold;
+}
+.btn-cerrar {
+    background-color: #d9534f;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.btn-cerrar:hover { background-color: #c9302c; }
+
+/* -------------------------------
+   Contenedor y paneles
+-------------------------------- */
+.contenedor { padding: 20px; }
+.panel h2 { margin-bottom: 15px; color: #4a90e2; }
+.panel-flex { display: flex; gap: 20px; flex-wrap: wrap; }
+
+/* -------------------------------
+   Tarjetas y formularios
+-------------------------------- */
+.tarjeta {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    flex: 1;
+    min-width: 280px;
+}
+form#form-agregar-paciente {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    max-width: 500px;
+    margin: 30px auto;
+}
+form#form-agregar-paciente label {
+    display: block;
+    margin: 10px 0 5px;
+    font-weight: bold;
+}
+form#form-agregar-paciente input,
+form#form-agregar-paciente select,
+form#form-agregar-paciente textarea {
+    width: 100%;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 0.95rem;
+}
+form#form-agregar-paciente textarea { resize: vertical; min-height: 60px; }
+
+/* -------------------------------
+   Botones
+-------------------------------- */
+.btn {
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    color: white;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+.btn.azul { background-color: #0275d8; }
+.btn.azul:hover { background-color: #025aa5; }
+.btn.amarillo { background-color: #f0ad4e; }
+.btn.amarillo:hover { opacity: 0.9; }
+.btn.rojo { background-color: #d9534f; }
+.btn.rojo:hover { background-color: #c9302c; }
+.btn.verde { background-color: #5cb85c; }
+.btn.verde:hover { opacity: 0.9; }
+.btn.gris { background-color: #959295; }
+.btn.gris:hover { opacity: 0.9; }
+.btn.celeste { background-color: #4fb4d9; }
+.btn.celeste:hover { opacity: 0.9; }
+form#form-agregar-paciente button[type="submit"] {
+    background-color: #4a90e2;
+}
+form#form-agregar-paciente button[type="submit"]:hover {
+    background-color: #357ABD;
+}
+
+/* -------------------------------
+   Listas
+-------------------------------- */
+.lista-pacientes { list-style: none; padding: 0; margin: 0; }
+.lista-pacientes li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+}
+.btn-historial { background-color: #0275d8; color: white; padding: 5px 10px; border-radius: 5px; }
+.btn-historial:hover { background-color: #025aa5; }
+
+/* -------------------------------
+   Mensajes
+-------------------------------- */
+#mensaje, #mensaje-agregar { text-align: center; margin-top: 10px; font-weight: bold; }
+
+/* -------------------------------
+   Responsive
+-------------------------------- */
+@media (max-width: 768px) { .panel-flex { flex-direction: column; } }
+select, input, textarea {
+    padding: 8px 12px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 0.95rem;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+}
+
+th {
+    background-color: #4a90e2; 
+    color: white;
+}
+
+tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+/* Estilo general */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f7f8fc;
+    margin: 0;
+    padding: 0;
+}
+
+h1 {
+    text-align: center;
+    margin: 20px 0;
+    color: #333;
+}
+
+/* Contenedor principal */
+.contenedor {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Tabla de doctores */
+.tabla-doctores {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    overflow-x: auto;
+    margin-bottom: 20px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table th, table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+table th {
+    background-color: #4CAF50;
+    color: white;
+    text-transform: uppercase;
+    font-size: 0.95em;
+}
+
+table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+table tr:hover {
+    background-color: #e8f5e9;
+}
+
+/* Botones dentro de la tabla */
+table button {
+    padding: 6px 10px;
+    margin-right: 5px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    color: #fff;
+    font-size: 0.9em;
+    transition: background 0.3s;
+}
+
+table button:first-child {
+    background-color: #ffc107; /* amarillo para editar */
+}
+
+table button:first-child:hover {
+    background-color: #e0a800;
+}
+
+table button:last-child {
+    background-color: #f44336; /* rojo para eliminar */
+}
+
+table button:last-child:hover {
+    background-color: #d32f2f;
+}
+
+/* Botones de acción generales */
+.acciones {
+    text-align: right;
+    margin-bottom: 40px;
+}
+
+.acciones button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    background-color: #4CAF50;
+    color: #fff;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.acciones button:hover {
+    background-color: #45a049;
+}
+/* Modal */
+.modal {
+    display: none; /* oculto por defecto */
+    position: fixed;
+    z-index: 100;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-contenido {
+    background-color: #fff;
+    margin: 10% auto;
+    padding: 20px;
+    border-radius: 10px;
+    width: 400px;
+    position: relative;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.modal-contenido h2 {
+    margin-top: 0;
+}
+
+.modal-contenido label {
+    display: block;
+    margin-top: 10px;
+}
+
+.modal-contenido input {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+    box-sizing: border-box;
+}
+
+.modal-contenido button {
+    margin-top: 15px;
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    border: none;
+    color: #fff;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.modal-contenido button:hover {
+    background-color: #45a049;
+}
+
+/* Botón de cerrar */
+.cerrar {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 1.5em;
+    cursor: pointer;
+}
+/* General */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f9f9f9;
+    color: #333;
+}
+
+header {
+    background-color: #4CAF50;
+    color: white;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 1.8em;
+}
+
+header button {
+    padding: 8px 14px;
+    font-size: 0.95em;
+    background-color: white;
+    color: #4CAF50;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+header button:hover {
+    background-color: #e6e6e6;
+}
+
+/* Main */
+main {
+    padding: 20px;
+}
+
+label {
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+select {
+    padding: 6px 10px;
+    font-size: 1em;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    margin-bottom: 20px;
+}
+
+/* Tabla */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    background-color: white;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+th, td {
+    padding: 12px 8px;
+    text-align: center;
+}
+
+th {
+    background-color: #e0f2e9;
+    color: #333;
+    font-weight: 600;
+}
+
+tbody tr:nth-child(even) {
+    background-color: #f6f6f6;
+}
+
+tbody tr:hover {
+    background-color: #d9f0e5;
+    cursor: pointer;
+}
+
+/* Botón detalle */
+.btn-detalle {
+    cursor: pointer;
+    padding: 6px 12px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.btn-detalle:hover {
+    background-color: #45a049;
+}
+
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 100;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: white;
+    margin: 5% auto;
+    padding: 25px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 850px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    animation: fadeIn 0.3s ease;
+}
+
+.close {
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #888;
+    transition: 0.3s;
+}
+
+.close:hover {
+    color: #000;
+}
+
+/* Detalles de tabla dentro del modal */
+.detalle-tabla {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+}
+
+.detalle-tabla th, .detalle-tabla td {
+    border: 1px solid #ccc;
+    padding: 8px;
+}
+
+.detalle-tabla th {
+    background-color: #e0f2e9;
+    font-weight: 600;
+}
+
+.comparacion td {
+    text-align: center;
+}
+
+/* Secciones dentro del modal */
+.section-title {
+    margin-top: 18px;
+    margin-bottom: 8px;
+    font-weight: bold;
+    font-size: 1.1em;
+    color: #4CAF50;
+}
+
+/* Observaciones */
+p {
+    background-color: #f4f4f4;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+}
+
+/* Animación modal */
+@keyframes fadeIn {
+    from {opacity: 0;}
+    to {opacity: 1;}
+}

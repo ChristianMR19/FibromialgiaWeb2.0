@@ -1,0 +1,109 @@
+<!-- doctores.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Administrar Doctores</title>
+  <link rel="stylesheet" href="doctores.css">
+</head>
+<body>
+  <h1>Administrar Doctores</h1>
+
+  <div class="contenedor">
+    <!-- Tabla de doctores -->
+    <div class="tabla-doctores">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Rol</th>
+            <th>Correo</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-doctores">
+          <!-- Doctores dinámicos -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Botones de acción -->
+    <div class="acciones">
+      <button onclick="agregarDoctor()">➕ Agregar Doctor</button>
+      <button onclick="editarDoctor()">✏ Editar Doctor</button>
+      <button onclick="volverIndex()">⬅ Volver al Inicio</button>
+    </div>
+  </div>
+
+  <script>
+    const tabla = document.getElementById("tabla-doctores");
+    const token = localStorage.getItem("token");
+
+    // Redirigir a agregar doctor
+    function agregarDoctor() {
+      window.location.href = "agregar_doctor.html";
+    }
+
+    // Redirigir a editar doctor
+    function editarDoctor() {
+      window.location.href = "editar_doctor.html";
+    }
+
+    // Volver al index
+    function volverIndex() {
+      window.location.href = "index.html";
+    }
+
+    // Función para eliminar doctor
+    async function eliminarDoctor(id) {
+      if (!confirm("¿Seguro que deseas eliminar este doctor?")) return;
+
+      try {
+        const res = await fetch(`http://localhost:3000/doctores/${id}`, {
+          method: "DELETE",
+          headers: { "Authorization": "Bearer " + token }
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Error al eliminar doctor");
+
+        alert(data.message);
+        cargarDoctores();
+      } catch (err) {
+        alert("Error eliminando doctor: " + err.message);
+      }
+    }
+
+    // Cargar tabla de doctores
+    async function cargarDoctores() {
+      try {
+        const res = await fetch("http://localhost:3000/doctores", {
+          headers: { "Authorization": "Bearer " + token }
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Error al cargar doctores");
+
+        tabla.innerHTML = "";
+        data.forEach(doc => {
+          tabla.innerHTML += `
+            <tr>
+              <td>${doc.id_doctor}</td>
+              <td>${doc.nombre} ${doc.apellido}</td>
+              <td>${doc.rol || "—"}</td>
+              <td>${doc.correo}</td>
+              <td>
+                <button onclick="eliminarDoctor(${doc.id_doctor})">🗑 Eliminar</button>
+              </td>
+            </tr>
+          `;
+        });
+      } catch (err) {
+        tabla.innerHTML = `<tr><td colspan="5" style="color:red;">❌ ${err.message}</td></tr>`;
+      }
+    }
+
+    // Inicializar tabla
+    cargarDoctores();
+  </script>
+</body>
+</html>

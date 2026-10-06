@@ -1,0 +1,116 @@
+<!-- eliminar_paciente.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eliminar Paciente - Fibromialgia</title>
+  <link rel="stylesheet" href="styles.css">
+  <script>
+    // Protección de página
+    const token = localStorage.getItem("token");
+    if (!token) window.location.href = "login.html";
+  </script>
+  
+</head>
+<body>
+  <header class="header">
+    <h1>Eliminar Paciente</h1>
+    <button class="btn azul" onclick="window.location.href='index.html'">⬅ Volver</button>
+  </header>
+
+  <main class="contenedor">
+    <label for="dni-filtro">Filtrar por DNI:</label>
+    <input type="text" id="dni-filtro" placeholder="Ingrese DNI">
+
+    <table id="tabla-pacientes">
+      <thead>
+        <tr>
+          <th>DNI</th>
+          <th>Nombre</th>
+          <th>Apellido</th>
+          <th>Correo</th>
+          <th>Acción</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Aquí se cargan los pacientes -->
+      </tbody>
+    </table>
+
+    <p id="mensaje"></p>
+  </main>
+
+  <script>
+    const tablaBody = document.querySelector("#tabla-pacientes tbody");
+    const mensaje = document.getElementById("mensaje");
+    const dniFiltro = document.getElementById("dni-filtro");
+    let pacientes = [];
+
+    // Función para cargar la lista de pacientes
+    async function cargarPacientes() {
+      try {
+        const response = await fetch("http://localhost:3000/pacientes", {
+          headers: { "Authorization": "Bearer " + token }
+        });
+        pacientes = await response.json();
+        mostrarPacientes(pacientes);
+      } catch (err) {
+        mensaje.textContent = "❌ Error de conexión con el servidor";
+      }
+    }
+
+    // Función para mostrar pacientes en la tabla
+    function mostrarPacientes(lista) {
+      tablaBody.innerHTML = "";
+      lista.forEach(p => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${p.dni}</td>
+          <td>${p.nombre}</td>
+          <td>${p.apellido}</td>
+          <td>${p.correo || ""}</td>
+          <td><button class="eliminar" data-dni="${p.dni}">Eliminar</button></td>
+        `;
+        tablaBody.appendChild(tr);
+      });
+    }
+
+    // Filtro por DNI
+    dniFiltro.addEventListener("input", () => {
+      const valor = dniFiltro.value.trim();
+      const filtrados = pacientes.filter(p => p.dni.includes(valor));
+      mostrarPacientes(filtrados);
+    });
+
+    // Evento para eliminar paciente
+    tablaBody.addEventListener("click", async (e) => {
+      if (!e.target.classList.contains("eliminar")) return;
+
+      const dni = e.target.dataset.dni;
+      if (!confirm(`¿Seguro que quieres eliminar al paciente con DNI ${dni}?`)) return;
+
+      try {
+        const response = await fetch(`http://localhost:3000/pacientes/${dni}`, {
+          method: "DELETE",
+          headers: { "Authorization": "Bearer " + token }
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          mensaje.textContent = "❌ " + (data.error || "Error al eliminar paciente");
+          return;
+        }
+        mensaje.textContent = "✅ Paciente eliminado correctamente";
+        // Recargar lista
+        cargarPacientes();
+      } catch (err) {
+        mensaje.textContent = "❌ Error de conexión con el servidor";
+      }
+    });
+
+    // Carga inicial
+    cargarPacientes();
+  </script>
+  <script src="loadHeader.js"></script>
+</body>
+</html>

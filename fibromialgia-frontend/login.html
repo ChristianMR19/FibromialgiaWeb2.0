@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Fibromialgia</title>
+  <link rel="stylesheet" href="login.css">
+  <script>
+    // Si ya hay token, redirige automáticamente a la página protegida
+    const token = localStorage.getItem("token");
+    if (token) {
+      window.location.href = "index.html";
+    }
+  </script>
+</head>
+<body>
+<div class="login-container">  
+       <header class="login-header">
+          <h1 class="nombre-software">💠 FibroCare AI</h1>  
+  <h2 class="titulo-plataforma">
+    Plataforma Web para la Detección Temprana de Síntomas de Fibromialgia
+  </h2>
+     
+      <p class="subtitulo">Accede para gestionar la predicción y seguimiento de los pacientes</p>
+    </header>
+
+      
+
+    <h2>🔐 Iniciar Sesión</h2>
+    <form id="loginForm">
+      <label for="correo">Correo</label>
+      <input type="email" id="correo" name="correo" required placeholder="ejemplo@correo.com">
+
+      <label for="password">Contraseña</label>
+      <input type="password" id="password" name="password" required placeholder="********">
+
+      <button type="submit">Ingresar</button>
+    </form>
+    <p id="mensaje"></p>
+  </div>
+
+  <script>
+    const loginForm = document.getElementById("loginForm");
+    const mensaje = document.getElementById("mensaje");
+
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const email = document.getElementById("correo").value;
+      const password = document.getElementById("password").value;
+
+      try {
+        const response = await fetch("http://localhost:3000/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+
+        const data = await response.json();
+        console.log("Respuesta completa del servidor:", data);
+
+        if (data.token) {
+          localStorage.setItem("token", data.token);
+          console.log("Token guardado:", localStorage.getItem("token"));
+        } else {
+          console.error("❌ Token no recibido del servidor");
+        }
+
+        if (response.ok) {
+          mensaje.textContent = "✅ Inicio de sesión exitoso";
+          mensaje.classList.add("success");
+          window.location.href = "index.html";
+        } else {
+          mensaje.textContent = "❌ " + (data.error || "Error en login");
+          mensaje.classList.add("error");
+        }
+      } catch (err) {
+        console.error("Error:", err);
+        mensaje.textContent = "❌ Error de conexión con el servidor";
+        mensaje.classList.add("error");
+      }
+    });
+  </script>
+</body>
+</html>

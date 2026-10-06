@@ -1,0 +1,226 @@
+<!-- editar_doctor.html -->
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Doctor</title>
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        // Protección de página
+        const token = localStorage.getItem("token");
+        if (!token) window.location.href = "login.html";
+    </script>
+</head>
+
+<body>
+    <header class="header">
+        <h1>Editar Doctor</h1>
+<button style="float:right;" onclick="window.location.href='doctores.html'">Volver</button>  
+  </header>
+
+    <main class="contenedor">
+        <label for="apellido-filtro">Filtrar por Apellido:</label>
+        <input type="text" id="apellido-filtro" placeholder="Ingrese Apellido">
+
+        <table id="tabla-doctores">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Apellido</th>
+                    <th>Correo</th>
+                    <th>Rol</th>
+                    <th>CMP</th>
+                    <th>Telefono</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Doctores dinámicos -->
+            </tbody>
+        </table>
+
+        <div id="form-editar" style="display:none; margin-top:20px;">
+            <h3>Editar Datos del Doctor</h3>
+            <form id="editarForm">
+                
+                <input type="hidden" id="id-doctor">
+
+                <label>Nombre:</label>
+                <input type="text" id="nombre" required>
+
+                <label>Apellido:</label>
+                <input type="text" id="apellido" required>
+
+                <label>Correo:</label>
+                <input type="email" id="correo" required>
+
+                <label>Rol:</label>
+                <select id="rol" required>
+                    <option value="">--Seleccionar--</option>
+                    <option value="admin">Admin</option>
+                    <option value="doctor">Doctor</option>
+                </select>
+
+                 <label>CMP:</label>
+                <input type="text" id="cmp" required>
+
+                <label>Telefono:</label>
+                <input type="text" id="telefono" required>
+
+                <label>Contraseña:</label>
+                <input type="password" id="password" placeholder="Ingrese nueva contraseña" required>
+<div style="margin-top:10px;">
+                <button type="submit">Guardar Cambios</button>
+                 <button type="button" id="cancelar-edicion">Cancelar</button>
+            </div>
+                </form>
+            <p id="mensaje-editar"></p>
+        </div>
+
+        <p id="mensaje"></p>
+    </main>
+
+    <script>
+        const tablaBody = document.querySelector("#tabla-doctores tbody");
+        const mensaje = document.getElementById("mensaje");
+        const apellidoFiltro = document.getElementById("apellido-filtro");
+        const formEditar = document.getElementById("form-editar");
+        const mensajeEditar = document.getElementById("mensaje-editar");
+        let doctores = [];
+        let idActual = "";
+
+        // Cargar doctores
+        async function cargarDoctores() {
+            try {
+                const response = await fetch("http://localhost:3000/doctores", {
+                    headers: { "Authorization": "Bearer " + token }
+                });
+                doctores = await response.json();
+                mostrarDoctores(doctores);
+            } catch (err) {
+                mensaje.textContent = "❌ Error de conexión con el servidor";
+            }
+        }
+
+        // Mostrar doctores en tabla
+        function mostrarDoctores(lista) {
+            tablaBody.innerHTML = "";
+            lista.forEach(d => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${d.id_doctor}</td>
+                    <td>${d.nombre}</td>
+                    <td>${d.apellido}</td>
+                    <td>${d.rol || ""}</td>
+                    <td>${d.correo}</td>
+                    <td>${d.cmp || ""}</td>
+                   <td>${d.telefono || ""}</td>
+                    <td><button class="editar" data-id="${d.id_doctor}">Editar</button></td>
+                `;
+                tablaBody.appendChild(tr);
+            });
+        }
+
+        // Filtrar por apellido
+        apellidoFiltro.addEventListener("input", () => {
+            const valor = apellidoFiltro.value.trim().toLowerCase();
+            const filtrados = doctores.filter(d => d.apellido.toLowerCase().includes(valor));
+            mostrarDoctores(filtrados);
+        });
+
+        // Seleccionar doctor para editar
+        tablaBody.addEventListener("click", async (e) => {
+            if (!e.target.classList.contains("editar")) return;
+            idActual = e.target.dataset.id;
+
+            try {
+                const response = await fetch(`http://localhost:3000/doctores/${idActual}`, {
+                    headers: { "Authorization": "Bearer " + token }
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    mensaje.textContent = "❌ " + (data.error || "Doctor no encontrado");
+                    return;
+                }
+
+                document.getElementById("id-doctor").value = data.id_doctor;
+                document.getElementById("nombre").value = data.nombre;
+                document.getElementById("apellido").value = data.apellido;
+                document.getElementById("correo").value = data.correo;
+                document.getElementById("rol").value = data.rol || "";
+                document.getElementById("cmp").value = data.cmp || "";
+                document.getElementById("telefono").value = data.telefono || "";
+                document.getElementById("password").value = "";
+
+                formEditar.style.display = "block";
+                mensaje.textContent = "";
+            } catch (err) {
+                mensaje.textContent = "❌ Error de conexión con el servidor";
+            }
+        });
+
+        // Guardar cambios
+        document.getElementById("editarForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            try {
+                const body = {
+                    nombre: document.getElementById("nombre").value,
+                    apellido: document.getElementById("apellido").value,
+                    correo: document.getElementById("correo").value,
+                    rol: document.getElementById("rol").value,
+                    cmp: document.getElementById("cmp").value,
+                    telefono: document.getElementById("telefono").value,
+                    password: document.getElementById("password").value
+                };
+
+                const response = await fetch(`http://localhost:3000/doctores/${idActual}`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer " + token
+                    },
+                    body: JSON.stringify(body)
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    mensajeEditar.textContent = "❌ " + (data.error || "Error al actualizar");
+                    return;
+                }
+
+                mensajeEditar.textContent = "✅ Doctor actualizado correctamente";
+                cargarDoctores();
+                formEditar.style.display = "none";
+            } catch (err) {
+                mensajeEditar.textContent = "❌ Error de conexión con el servidor";
+            }
+        });
+// Botón Cancelar
+const cancelarBtn = document.getElementById("cancelar-edicion");
+
+cancelarBtn.addEventListener("click", () => {
+    // Ocultar el formulario
+    formEditar.style.display = "none";
+
+    // Limpiar campos
+    document.getElementById("id-doctor").value = "";
+    document.getElementById("nombre").value = "";
+    document.getElementById("apellido").value = "";
+    document.getElementById("correo").value = "";
+    document.getElementById("rol").value = "";
+    document.getElementById("password").value = "";
+
+    // Limpiar mensajes
+    mensajeEditar.textContent = "";
+});
+
+        // Inicializar
+        cargarDoctores();
+    </script>
+</body>
+
+</html>
