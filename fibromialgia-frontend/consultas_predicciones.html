@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Consultas y Predicciones</title>
     <link rel="stylesheet" href="consultas_predicciones.css">
-
+<script src="config.js"></script>
 </head>
 
 <body>
@@ -66,7 +66,7 @@
         function formatearDecimal(valor) { return valor !== null ? Number(valor).toFixed(2) : "N/A"; }
 
         async function cargarPacientes() {
-            const res = await fetch("http://localhost:3000/pacientes", { headers: { "Authorization": `Bearer ${token}` } });
+            const res = await fetch(API_URL +"/pacientes/", { headers: { "Authorization": `Bearer ${token}` } });
             const data = await res.json();
             data.forEach(p => {
                 const opt = document.createElement("option");
@@ -79,7 +79,7 @@
         pacienteSelect.addEventListener("change", async () => {
             const id = pacienteSelect.value;
             if (!id) return;
-            const res = await fetch(`http://localhost:3000/consultas_predicciones/paciente/${id}`, { headers: { "Authorization": `Bearer ${token}` } });
+            const res = await fetch(API_URL + "/consultas_predicciones/paciente/"+id, { headers: { "Authorization": `Bearer ${token}` } });
             const consultas = await res.json();
             tablaBody.innerHTML = "";
 
@@ -170,7 +170,7 @@ if (c.tiene_monto_evitado && c.tiene_sintomas_actuales) {
         });
         async function mostrarEvolucion(consulta) {
     try {
-        const res = await fetch(`http://localhost:3000/consultas_predicciones/comparacion_agravamiento/${consulta.id_consulta}`, {
+        const res = await fetch(API_URL + "/consultas_predicciones/comparacion_agravamiento/" + consulta.id_consulta, {
     headers: { "Authorization": `Bearer ${token}` }
 });
 if (!res.ok) {
@@ -412,7 +412,7 @@ const comp = await res.json();
                 try {
                     console.log("Enviando precisión:", { id_prediccion, total_sintomas, sintomas_correctos });
 
-                    const res = await fetch("http://localhost:3000/consultas_predicciones/precision", {
+                    const res = await fetch(API_URL +"/consultas_predicciones/precision/", {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
@@ -457,7 +457,7 @@ const comp = await res.json();
                 };
 
                 try {
-                    const res = await fetch("http://localhost:3000/consultas_predicciones/comparacion_agravamiento", {
+                    const res = await fetch(API_URL +"/consultas_predicciones/comparacion_agravamiento/", {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
@@ -487,7 +487,7 @@ const comp = await res.json();
         const monto_evitado = parseFloat(document.getElementById("monto_evitado").value);
 
         try {
-            const res = await fetch("http://localhost:3000/consultas_predicciones/costo_evitado", {
+            const res = await fetch(API_URL +"/consultas_predicciones/costo_evitado/", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -514,7 +514,7 @@ const comp = await res.json();
 
 async function ingresarMontoEvitado(consulta) {
     try {
-        const res = await fetch(`http://localhost:3000/consultas_predicciones/comparacion_agravamiento/${consulta.id_consulta}`, {
+        const res = await fetch(API_URL + "/consultas_predicciones/comparacion_agravamiento/"+consulta.id_consulta, {
     headers: { "Authorization": `Bearer ${token}` }
 });
 if (!res.ok) {
@@ -602,7 +602,7 @@ window.onload = () => {
 
     async function cargarPacientes() {
         try {
-            const res = await fetch("http://localhost:3000/pacientes", {
+            const res = await fetch(API_URL +"/pacientes/", {
                 headers: { "Authorization": `Bearer ${token}` }
             });
             pacientes = await res.json();

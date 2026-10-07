@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Registrar Doctor</title>
   <link rel="stylesheet" href="stylesa.css">
+  <script src="config.js"></script>
   <script>
     // Protección de página
     window.onload = () => {
@@ -160,7 +161,7 @@
       };
 
       try {
-        const response = await fetch("http://localhost:3000/doctores", {
+        const response = await fetch(API_URL +"/doctores/", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

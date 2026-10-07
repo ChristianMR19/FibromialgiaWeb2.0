@@ -10,6 +10,7 @@
 
     <link rel="stylesheet" href="styles.css">
     <!-- Script de protección -->
+     <script src="config.js"></script>
     <script>
         window.onload = () => {
             // Revisar si existe token
@@ -115,7 +116,7 @@
 
        async function cargarResumenPredicciones() {
     try {
-        const res = await fetch("http://localhost:3000/consultas_predicciones/resumen", {
+        const res = await fetch(API_URL +"/consultas_predicciones/resumen/", {
             headers: { "Authorization": "Bearer " + token }
         });
         const data = await res.json();
@@ -133,7 +134,7 @@ cargarResumenPredicciones();
 
 
     </script>
-
+       <script src="config.js"></script>
     <script src="app.js"></script>
     <!-- Script para abrir/cerrar sidebar -->
     <script>
@@ -185,7 +186,7 @@ cargarResumenPredicciones();
         // Cargar pacientes desde el backend
         async function cargarPacientes() {
             try {
-                const res = await fetch("http://localhost:3000/pacientes", {
+                const res = await fetch(API_URL +"/pacientes/", {
                     headers: { "Authorization": "Bearer " + token }
                 });
                 pacientes = await res.json();

@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editar Paciente - Fibromialgia</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="config.js"></script>
     <script>
         // Protección de página
         const token = localStorage.getItem("token");
@@ -103,7 +104,7 @@
 
         async function cargarPacientes() {
             try {
-                const response = await fetch("http://localhost:3000/pacientes", {
+                const response = await fetch(API_URL +"/pacientes/", {
                     headers: { "Authorization": "Bearer " + token }
                 });
                 pacientes = await response.json();
@@ -139,7 +140,7 @@
             dniActual = e.target.dataset.dni;
 
             try {
-                const response = await fetch(`http://localhost:3000/pacientes/${dniActual}`, {
+                const response = await fetch(API_URL + "/pacientes/"+dniActual, {
                     headers: { "Authorization": "Bearer " + token }
                 });
                 const data = await response.json();
@@ -185,7 +186,7 @@
                     observaciones: document.getElementById("observaciones").value
                 };
 
-                const response = await fetch(`http://localhost:3000/pacientes/${dniActual}`, {
+                const response = await fetch(API_URL + "/pacientes/"+dniActual, {
                     method: "PUT",
                     headers: {
                         "Content-Type": "application/json",

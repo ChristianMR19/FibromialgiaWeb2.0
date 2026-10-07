@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Gráficos de Predicciones</title>
+  <script src="config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
@@ -93,7 +94,7 @@
     async function cargarGrafico1() {
       try {
         const token = localStorage.getItem("token");
-        const res = await fetch("http://localhost:3000/consultas_predicciones/precision", {
+        const res = await fetch(API_URL +"/consultas_predicciones/precision/", {
           headers: { "Authorization": "Bearer " + token }
         });
         const data = await res.json();
@@ -126,7 +127,7 @@
     async function cargarGrafico2() {
       try {
         const token = localStorage.getItem("token");
-        const res = await fetch("http://localhost:3000/consultas_predicciones/comparacion_agravamiento", {
+        const res = await fetch(API_URL +"/consultas_predicciones/comparacion_agravamiento/", {
           headers: { "Authorization": "Bearer " + token }
         });
         const data = await res.json();
@@ -165,7 +166,7 @@
         const token = localStorage.getItem("token");
         
 // Traer métricas
-const resMetricas = await fetch("http://localhost:3000/consultas_predicciones/costo_evitado/metricas", {
+const resMetricas = await fetch(API_URL +"/consultas_predicciones/costo_evitado/metricas/", {
   headers: { "Authorization": "Bearer " + token }
 });
 const metricas = await resMetricas.json();
@@ -183,7 +184,7 @@ if (metricas) {
 }
 
         
-        const res = await fetch("http://localhost:3000/consultas_predicciones/costo_evitado", {
+        const res = await fetch(API_URL +"/consultas_predicciones/costo_evitado/", {
           headers: { "Authorization": "Bearer " + token }
         });
         const data = await res.json();
@@ -236,7 +237,7 @@ if (metricas) {
 async function cargarGrafico4() {
   try {
     const token = localStorage.getItem("token");
-    const res = await fetch("http://localhost:3000/consultas_predicciones/comparacion_agravamiento", {
+    const res = await fetch(API_URL +"/consultas_predicciones/comparacion_agravamiento/", {
       headers: { "Authorization": "Bearer " + token }
     });
     const data = await res.json();

@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generar Consulta - Fibromialgia</title>
     <link rel="stylesheet" href="stylesx.css">
+    <script src="config.js"></script>
     <style>
         .contenedor { max-width: 700px; margin: 30px auto; padding: 20px; background: #fff; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
         h2 { text-align: center; margin-bottom: 20px; }
@@ -41,7 +42,7 @@ const inputBuscar = document.getElementById("buscar-paciente");
 let listaPacientes = []; // Guardamos todos los pacientes
 
 try {
-    const res = await fetch("http://localhost:3000/pacientes", {
+    const res = await fetch(API_URL +"/pacientes/", {
         headers: { "Authorization": "Bearer " + token }
     });
     listaPacientes = await res.json();
@@ -92,7 +93,7 @@ inputBuscar.addEventListener("input", () => {
                 };
 
                 try {
-                    const res = await fetch("http://localhost:3000/consultas", {
+                    const res = await fetch(API_URL +"/consultas/", {
                         method: "POST",
                         headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
                         body: JSON.stringify(data)
