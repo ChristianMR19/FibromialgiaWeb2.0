@@ -20,7 +20,8 @@ TARGET_NAMES = [
 ]
 
 # cargar modelo al iniciar el servidor (solo una vez)
-model = joblib.load("modelo_evolucion_sintomas.pkl")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+model = joblib.load(os.path.join(BASE_DIR, "modelo_evolucion_sintomas.pkl"))
 
 app = Flask(__name__)
 CORS(app)  # permite al frontend hacer requests desde otro origen
