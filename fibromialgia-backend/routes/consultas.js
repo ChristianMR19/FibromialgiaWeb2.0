@@ -5,7 +5,9 @@ const axios = require("axios");
 const verifyToken = require("../middleware/verifyToken");
 
 const router = express.Router();
-const FLASK_URL = "http://localhost:8000/predict";
+require("dotenv").config();
+
+const FLASK_URL = `${process.env.FLASK_URL}/predict`;
 
 // Crear nueva consulta
 router.post("/", async (req, res) => {
